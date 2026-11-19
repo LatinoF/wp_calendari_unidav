@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.0.3 - 2026-11-19
+
+### Description
+Expose automatic-update controls and refresh GitHub release data on demand.
+
+### Type
+Patch
+
+### Notes
+- Report update support to WordPress even when the installed version is already current.
+- Bypass the cached GitHub release response during a forced update check.
+
 ## v4.0.2 - 2026-11-19
 
 ### Description

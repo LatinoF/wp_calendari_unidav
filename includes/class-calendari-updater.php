@@ -23,7 +23,16 @@ final class Calendari_Updater {
             return $transient;
         }
 
-        $release = get_transient('calendari_github_latest_release');
+        if (!isset($transient->no_update) || !is_array($transient->no_update)) {
+            $transient->no_update = array();
+        }
+        $transient->no_update[$plugin_basename] = $this->build_update_data($plugin_basename, CALENDARI_VERSION, '');
+
+        $force_check = isset($_GET['force-check']);
+        if ($force_check) {
+            delete_transient('calendari_github_latest_release');
+        }
+        $release = $force_check ? false : get_transient('calendari_github_latest_release');
         if (false === $release) {
             $response = wp_remote_get(
                 'https://api.github.com/repos/' . rawurlencode(strtok($this->repository, '/')) . '/'. rawurlencode(substr($this->repository, strpos($this->repository, '/') + 1)) . '/releases/latest',
@@ -63,7 +72,17 @@ final class Calendari_Updater {
             return $transient;
         }
 
-        $transient->response[$plugin_basename] = (object) array(
+        unset($transient->no_update[$plugin_basename]);
+        if (!isset($transient->response) || !is_array($transient->response)) {
+            $transient->response = array();
+        }
+        $transient->response[$plugin_basename] = $this->build_update_data($plugin_basename, $version, $package);
+
+        return $transient;
+    }
+
+    private function build_update_data(string $plugin_basename, string $version, string $package): object {
+        return (object) array(
             'id' => 'https://github.com/' . $this->repository,
             'slug' => dirname($plugin_basename),
             'plugin' => $plugin_basename,
@@ -74,7 +93,5 @@ final class Calendari_Updater {
             'requires' => '6.0',
             'requires_php' => '8.0',
         );
-
-        return $transient;
     }
 }
