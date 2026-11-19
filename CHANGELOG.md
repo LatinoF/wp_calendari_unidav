@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.0.1 - 2026-11-19
+
+### Description
+Fix automatic update matching for GitHub release asset names.
+
+### Type
+Patch
+
+### Notes
+- Accept GitHub's period-normalized release ZIP name as well as names containing spaces.
+
 ## v4.0.0 - 2026-11-19
 
 ### Description

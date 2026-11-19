@@ -54,7 +54,7 @@ final class Calendari_Updater {
         $package = '';
         foreach ((array) ($release['assets'] ?? array()) as $asset) {
             $asset_name = (string) ($asset['name'] ?? '');
-            if (preg_match('/^Calendari\s+' . preg_quote($version, '/') . '\.zip$/i', $asset_name)) {
+            if (preg_match('/^Calendari[ .-]+' . preg_quote($version, '/') . '\.zip$/i', $asset_name)) {
                 $package = esc_url_raw((string) ($asset['browser_download_url'] ?? ''));
                 break;
             }
