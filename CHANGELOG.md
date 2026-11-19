@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.0.2 - 2026-11-19
+
+### Description
+Wrap course-code lists in the exam database editor and table.
+
+### Type
+Patch
+
+### Notes
+- Display each `CDS_IDS` code on a separate line in the admin database.
+- Use a multiline field for editing course codes while preserving comma-separated storage and imports.
+
 ## v4.0.1 - 2026-11-19
 
 ### Description

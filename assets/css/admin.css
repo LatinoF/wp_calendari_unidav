@@ -694,6 +694,12 @@
     padding: .65rem .75rem;
 }
 
+.calendari-admin-table td.calendari-course-codes-cell {
+    max-width: 10rem;
+    overflow-wrap: anywhere;
+    white-space: normal;
+}
+
 .calendari-admin-table td.calendari-actions-column {
     padding-left: .15rem;
     padding-right: .15rem;
@@ -1011,8 +1017,16 @@
     width: 100%;
 }
 
+.calendari-admin .calendari-degree-modal-fields .calendari-course-ids-input {
+    height: auto;
+    line-height: 1.4;
+    min-height: 6rem;
+    resize: vertical;
+}
+
 .calendari-admin .calendari-degree-modal-fields input:focus,
-.calendari-admin .calendari-degree-modal-fields select:focus {
+.calendari-admin .calendari-degree-modal-fields select:focus,
+.calendari-admin .calendari-degree-modal-fields .calendari-course-ids-input:focus {
     border-color: var(--calendari-admin-accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--calendari-admin-accent) 18%, transparent);
     outline: 0;
