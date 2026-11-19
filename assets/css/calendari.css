@@ -1,0 +1,361 @@
+.calendari-calendar {
+    --calendari-accent: #037aa4;
+    --calendari-card: color-mix(in srgb, var(--calendari-accent) 1.5%, white);
+    --calendari-ink: color-mix(in srgb, var(--calendari-accent) 18%, black);
+    --calendari-muted: color-mix(in srgb, var(--calendari-accent) 45%, gray);
+    --calendari-accent-deep: color-mix(in srgb, var(--calendari-accent) 70%, black);
+    --calendari-header: var(--calendari-accent);
+    --calendari-accent-soft: color-mix(in srgb, var(--calendari-accent) 14%, white);
+    --calendari-row-soft: color-mix(in srgb, var(--calendari-accent) 10%, white);
+    --calendari-surface: color-mix(in srgb, var(--calendari-accent) 5%, white);
+    --calendari-line: color-mix(in srgb, var(--calendari-accent) 18%, white);
+    --calendari-border: color-mix(in srgb, var(--calendari-accent) 80%, white);
+    --calendari-contrast: color-mix(in srgb, var(--calendari-accent) 4%, white);
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    color: var(--calendari-ink);
+    display: block;
+    font-family: var(--calendari-font-family, "Nunito", system-ui, -apple-system, sans-serif);
+    line-height: 1.55;
+    margin: 2.5rem 0;
+    max-width: 100%;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+}
+
+.calendari-calendar *,
+.calendari-calendar *::before,
+.calendari-calendar *::after {
+    box-sizing: border-box;
+}
+
+.calendari-heading {
+    margin: 0 0 1.15rem;
+}
+
+.calendari-heading h2 {
+    color: var(--calendari-ink);
+    font-family: "Nunito", system-ui, -apple-system, sans-serif;
+    font-size: clamp(1.4rem, 2.5vw, 1.9rem);
+    font-weight: 600;
+    letter-spacing: -.02em;
+    line-height: 1.08;
+    margin: 0;
+}
+
+.calendari-appeal {
+    background: transparent;
+    border: 0;
+    border-radius: 0;
+    padding: 0;
+}
+
+.calendari-course-group + .calendari-course-group {
+    margin-top: 1.65rem;
+    padding-top: 1.35rem;
+    border-top: 1px solid var(--calendari-line);
+}
+
+.calendari-course-group-heading {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .65rem 1rem;
+    justify-content: space-between;
+    margin: 0 0 .85rem;
+}
+
+.calendari-course-group-heading h3 {
+    color: var(--calendari-ink);
+    font-size: clamp(1rem, 1.7vw, 1.2rem);
+    font-weight: 700;
+    letter-spacing: -.01em;
+    margin: 0;
+}
+
+.calendari-course-group-heading .calendari-cds-list {
+    flex: 1 1 100%;
+}
+
+.calendari-group-note {
+    background: color-mix(in srgb, #e9b949 12%, white);
+    border: 1px solid color-mix(in srgb, #e9b949 35%, white);
+    border-radius: 10px;
+    color: color-mix(in srgb, #9a6d11 85%, black);
+    margin-top: 1rem;
+    padding: .8rem 1rem;
+}
+
+.calendari-group-note p {
+    color: inherit;
+    font-size: .82rem;
+    line-height: 1.6;
+    margin: 0;
+}
+
+.calendari-group-note p + p {
+    margin-top: .55rem;
+}
+
+.calendari-appeal-head {
+    align-items: center;
+    display: flex;
+    flex-wrap: wrap;
+    gap: .85rem;
+    margin-bottom: 1.15rem;
+}
+
+.calendari-view-tabs {
+    display: grid;
+    gap: .65rem;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    margin: 0 0 .85rem;
+    width: 100%;
+}
+
+.calendari-view-tab {
+    align-items: center;
+    appearance: none;
+    background: var(--calendari-surface);
+    border: 1px solid var(--calendari-line);
+    border-radius: var(--calendari-table-radius, 10px);
+    box-shadow: 0 2px 8px rgb(9 30 44 / 7%);
+    color: var(--calendari-accent-deep);
+    cursor: pointer;
+    display: inline-flex;
+    font: inherit;
+    font-size: .82rem;
+    font-weight: 700;
+    justify-content: center;
+    line-height: 1.2;
+    min-height: 44px;
+    padding: .65rem .9rem;
+    text-align: center;
+    transition: background-color .15s ease, border-color .15s ease, box-shadow .15s ease;
+    width: 100%;
+}
+
+.calendari-view-tab:hover:not([aria-selected=true]) {
+    background: var(--calendari-accent-soft);
+    border-color: var(--calendari-border);
+}
+
+.calendari-view-tab[aria-selected=true] {
+    background: var(--calendari-header);
+    border-color: var(--calendari-header);
+    box-shadow: 0 4px 12px rgb(9 30 44 / 12%);
+    color: var(--calendari-contrast);
+}
+
+.calendari-view-tab:focus-visible {
+    outline: 2px solid var(--calendari-accent);
+    outline-offset: 2px;
+}
+
+.calendari-view-tabpanel[hidden] {
+    display: none !important;
+}
+
+.calendari-cds-list {
+    display: flex;
+    flex: 1 1 100%;
+    flex-wrap: wrap;
+    gap: .4rem;
+}
+
+.calendari-cds-pill {
+    background: var(--calendari-accent-soft);
+    border: 1px solid var(--calendari-border);
+    border-radius: 999px;
+    color: var(--calendari-accent-deep);
+    font-size: .72rem;
+    font-variant-numeric: tabular-nums;
+    font-weight: 700;
+    letter-spacing: .04em;
+    padding: .24rem .62rem;
+}
+
+.calendari-table-wrap {
+    background: var(--calendari-card);
+    border: 1px solid var(--calendari-border);
+    border-radius: var(--calendari-table-radius, 10px);
+    overflow: hidden;
+    width: 100%;
+}
+
+.calendari-table {
+    background: var(--calendari-card);
+    border: 0;
+    border-collapse: separate;
+    border-radius: 0;
+    border-spacing: 0;
+    font-size: .875rem;
+    min-width: 100%;
+    overflow: visible;
+    width: max-content;
+}
+
+.calendari-table thead th {
+    background: var(--calendari-header);
+    border-bottom: 1px solid var(--calendari-line);
+    color: var(--calendari-contrast);
+    font-size: .875rem;
+    font-weight: 700 !important;
+    padding: .75rem 1rem;
+    text-align: left;
+    text-transform: uppercase;
+    white-space: nowrap;
+}
+
+.calendari-table tbody td {
+    background: var(--calendari-card) !important;
+    border-bottom: 0;
+    color: var(--calendari-ink);
+    font-variant-numeric: tabular-nums;
+    padding: .7rem 1rem;
+    text-align: left;
+    white-space: nowrap;
+}
+
+.calendari-table tbody td[rowspan] {
+    border-bottom: 0;
+}
+
+.calendari-table tbody + tbody > tr:first-child > td {
+    border-top: 1px solid var(--calendari-line);
+}
+
+.calendari-table tbody tr.calendari-row-alt td {
+    background: var(--calendari-row-soft) !important;
+}
+
+.calendari-table tbody td.calendari-month-cell {
+    font-size: .95rem;
+    font-weight: 700 !important;
+}
+
+.calendari-table tbody td.calendari-booking-cell {
+    font-weight: 400 !important;
+    vertical-align: middle;
+}
+
+.calendari-table tbody td.calendari-pw-deadline {
+    color: var(--calendari-accent-deep);
+    font-weight: 600;
+}
+
+.calendari-table tbody td.calendari-type-cell {
+    color: var(--calendari-accent-deep);
+    font-size: .75rem;
+    font-weight: 400 !important;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+    vertical-align: middle;
+}
+
+.calendari-table tbody td.calendari-exam-date,
+.calendari-table tbody td.calendari-exam-date strong {
+    font-weight: 700 !important;
+}
+
+.calendari-table tbody tr:last-child > td {
+    border-bottom: 0;
+}
+
+.calendari-table td.calendari-venue {
+    font-weight: 400 !important;
+    white-space: nowrap;
+}
+
+.calendari-table caption {
+    clip: rect(0 0 0 0);
+    clip-path: inset(50%);
+    height: 1px;
+    overflow: hidden;
+    position: absolute;
+    white-space: nowrap;
+    width: 1px;
+}
+
+.calendari-grid {
+    display: grid;
+    gap: 1.5rem;
+    grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+    margin-top: 1.5rem;
+}
+
+.calendari-month {
+    background: var(--calendari-surface);
+    border: 1px solid var(--calendari-line);
+    border-radius: 14px;
+    padding: 1.2rem;
+}
+
+.calendari-month h3 {
+    color: var(--calendari-ink);
+    font-size: 1.1rem;
+    font-weight: 600;
+    margin: 0 0 1rem;
+}
+
+.calendari-events {
+    display: grid;
+    gap: .7rem;
+}
+
+.calendari-event {
+    background: var(--calendari-card);
+    border: 1px solid var(--calendari-line);
+    border-left: 3px solid var(--calendari-accent);
+    border-radius: 8px;
+    display: grid;
+    gap: .2rem;
+    padding: .75rem .85rem;
+}
+
+.calendari-event-date {
+    color: var(--calendari-ink);
+    font-size: 1rem;
+    font-weight: 700;
+}
+
+.calendari-event span {
+    color: var(--calendari-muted);
+    font-size: .7rem;
+    font-weight: 700;
+    letter-spacing: .07em;
+    text-transform: uppercase;
+}
+
+.calendari-event small {
+    color: var(--calendari-muted);
+    font-size: .8rem;
+}
+
+.calendari-event .calendari-event-deadline {
+    color: var(--calendari-accent-deep);
+    font-size: .8rem;
+    font-weight: 700;
+}
+
+.calendari-event-venue {
+    color: var(--calendari-accent-deep);
+    font-size: .8rem;
+    font-weight: 700;
+    white-space: normal;
+}
+
+.calendari-message {
+    border-left: 3px solid var(--calendari-accent);
+    color: var(--calendari-muted);
+    padding-left: .75rem;
+}
+
+@media (max-width: 640px) {
+    .calendari-calendar { margin: 2rem 0; }
+    .calendari-heading { margin-bottom: 1.15rem; }
+    .calendari-table { font-size: .8rem; }
+    .calendari-table thead th { font-size: .62rem; padding: .55rem .55rem; }
+    .calendari-table tbody th, .calendari-table tbody td { padding: .55rem; }
+}
