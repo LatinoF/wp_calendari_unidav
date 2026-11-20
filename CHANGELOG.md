@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.0.9 - 2026-11-20
+
+### Description
+Match the Actions column's right inset to the other table columns.
+
+### Type
+Patch
+
+### Notes
+- Add the same right padding as the first column while keeping the Actions heading aligned with its controls.
+
 ## v4.0.8 - 2026-11-20
 
 ### Description

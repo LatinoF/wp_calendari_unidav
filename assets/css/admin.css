@@ -701,7 +701,7 @@
 
 .calendari-admin-table th.calendari-actions-column {
     padding-left: .15rem;
-    padding-right: .15rem;
+    padding-right: .75rem;
     text-align: left;
 }
 
@@ -741,7 +741,7 @@
 
 .calendari-admin-table td.calendari-actions-column {
     padding-left: .15rem;
-    padding-right: .15rem;
+    padding-right: .75rem;
     text-align: left;
 }
 
