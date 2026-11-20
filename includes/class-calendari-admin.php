@@ -114,7 +114,7 @@ final class Calendari_Admin {
 
         if ('database_laurea' === $tab) {
             $filters = array(
-                'aa_id' => $this->ajax_filter_value('aa_id'),
+                'aa_id' => Calendari_Format::normalize_academic_year_id($this->ajax_filter_value('aa_id')),
                 'mese' => absint($this->ajax_filter_value('mese')),
                 'data' => $this->ajax_filter_value('data'),
                 'sede' => $this->ajax_filter_value('sede'),
@@ -146,7 +146,7 @@ final class Calendari_Admin {
 
         if ('database_esami' === $tab) {
             $filters = array(
-                'aa_id' => $this->ajax_filter_value('aa_id'),
+                'aa_id' => Calendari_Format::normalize_academic_year_id($this->ajax_filter_value('aa_id')),
                 'tipo_corso' => $this->ajax_filter_value('tipo_corso'),
                 'gruppo' => $this->ajax_filter_value('gruppo'),
                 'tipo_prova' => $this->ajax_filter_value('tipo_prova'),
@@ -211,14 +211,14 @@ final class Calendari_Admin {
         }
 
         $academic_years = 'laurea' === $tipologia ? $this->degree_db->distinct_aa_ids() : $this->db->distinct_aa_ids();
-        $aa_id = $this->ajax_filter_value('builder_aa_id');
+        $aa_id = Calendari_Format::normalize_academic_year_id($this->ajax_filter_value('builder_aa_id'));
         if ('' !== $aa_id && !in_array($aa_id, $academic_years, true)) {
             $aa_id = '';
         }
         $course_types = 'esami' === $tipologia ? $this->db->distinct_course_types($aa_id) : array();
 
         wp_send_json_success(array(
-            'academic_years' => array_values($academic_years),
+            'academic_years' => array_map(static function (string $value): array { return array('value' => $value, 'label' => Calendari_Format::academic_year_label($value)); }, array_values($academic_years)),
             'course_types' => array_values($course_types),
         ));
     }
@@ -275,7 +275,7 @@ final class Calendari_Admin {
         $requested_tipologia = wp_unslash($_GET['builder_tipologia'] ?? '');
         $tipologia = is_scalar($requested_tipologia) ? sanitize_key((string) $requested_tipologia) : '';
         $tipologia = in_array($tipologia, array('esami', 'laurea'), true) ? $tipologia : '';
-        $aa_id = sanitize_text_field($_GET['builder_aa_id'] ?? '');
+        $aa_id = Calendari_Format::normalize_academic_year_id(sanitize_text_field($_GET['builder_aa_id'] ?? ''));
         $tipo_corso = strtolower(sanitize_text_field($_GET['builder_tipo_corso'] ?? ''));
         $mostra_tipo_prova = sanitize_key($_GET['builder_mostra_tipo_prova'] ?? 'nascondi');
         $mostra_tipo_prova = in_array($mostra_tipo_prova, array('mostra', 'nascondi'), true) ? $mostra_tipo_prova : 'nascondi';
@@ -342,7 +342,7 @@ final class Calendari_Admin {
                     <option value="esami" <?php selected($tipologia, 'esami'); ?>><?php esc_html_e('Esami', 'calendari'); ?></option>
                     <option value="laurea" <?php selected($tipologia, 'laurea'); ?>><?php esc_html_e('Sessioni di laurea', 'calendari'); ?></option>
                 </select></label>
-                <label class="<?php echo '' === $tipologia ? 'is-disabled' : ''; ?>"><span><?php esc_html_e('Anno accademico', 'calendari'); ?></span><select id="calendari-builder-academic-year" name="builder_aa_id" <?php disabled('' === $tipologia); ?>><option value=""><?php esc_html_e('Seleziona un anno accademico', 'calendari'); ?></option><?php foreach ($aa_options as $option) : ?><option value="<?php echo esc_attr($option); ?>" <?php selected($aa_id, $option); ?>><?php echo esc_html($option); ?></option><?php endforeach; ?></select></label>
+                <label class="<?php echo '' === $tipologia ? 'is-disabled' : ''; ?>"><span><?php esc_html_e('Anno accademico', 'calendari'); ?></span><select id="calendari-builder-academic-year" name="builder_aa_id" <?php disabled('' === $tipologia); ?>><option value=""><?php esc_html_e('Seleziona un anno accademico', 'calendari'); ?></option><?php foreach ($aa_options as $option) : ?><option value="<?php echo esc_attr($option); ?>" <?php selected($aa_id, $option); ?>><?php echo esc_html(Calendari_Format::academic_year_label($option)); ?></option><?php endforeach; ?></select></label>
                 <label class="<?php echo 'esami' === $tipologia ? '' : 'is-disabled'; ?>"><span><?php esc_html_e('Tipo corso', 'calendari'); ?></span><select id="calendari-builder-course-type" name="builder_tipo_corso" <?php disabled('esami' !== $tipologia); ?>><option value=""><?php esc_html_e('Seleziona un tipo corso', 'calendari'); ?></option><?php foreach ($course_options as $option) : ?><option value="<?php echo esc_attr(strtolower($option)); ?>" <?php selected($tipo_corso, strtolower($option)); ?>><?php echo esc_html($option); ?></option><?php endforeach; ?></select></label>
                 <label class="<?php echo $is_cds_course ? '' : 'is-disabled'; ?>"><span><?php esc_html_e('Mostra colonna tipo prova', 'calendari'); ?></span><select name="builder_mostra_tipo_prova" <?php disabled(!$is_cds_course); ?>>
                     <option value="nascondi" <?php selected($mostra_tipo_prova, 'nascondi'); ?>><?php esc_html_e('Nascosta', 'calendari'); ?></option>
@@ -390,7 +390,7 @@ final class Calendari_Admin {
 
     private function render_degree_sessions(?array $notice = null): void {
         $filters = array(
-            'aa_id' => sanitize_text_field($_GET['aa_id'] ?? ''),
+            'aa_id' => Calendari_Format::normalize_academic_year_id(sanitize_text_field($_GET['aa_id'] ?? '')) ,
             'mese' => absint($_GET['mese'] ?? 0),
             'data' => sanitize_text_field($_GET['data'] ?? ''),
             'sede' => sanitize_text_field($_GET['sede'] ?? ''),
@@ -417,7 +417,7 @@ final class Calendari_Admin {
         $has_filters = '' !== $filters['aa_id'] || $filters['mese'] > 0 || '' !== $filters['data'] || '' !== $filters['sede'];
 
         $aa_options = array_map(static function (string $value): array {
-            return array('value' => $value, 'label' => $value);
+            return array('value' => $value, 'label' => Calendari_Format::academic_year_label($value));
         }, $aa_values);
         $month_options = array_map(static function (int $value): array {
             return array('value' => (string) $value, 'label' => Calendari_Format::month_name($value, true));
@@ -474,7 +474,7 @@ final class Calendari_Admin {
                     <div class="calendari-degree-modal-fields">
                         <label for="calendari-degree-modal-aa-id">
                             <span>AA_ID</span>
-                            <input type="text" id="calendari-degree-modal-aa-id" name="aa_id" required>
+                            <input type="text" id="calendari-degree-modal-aa-id" name="aa_id" placeholder="2026" required>
                         </label>
                         <label for="calendari-degree-modal-date">
                             <span>DATA</span>
@@ -511,7 +511,7 @@ final class Calendari_Admin {
                     <?php foreach ($records as $record) : ?>
                         <?php $is_hidden = !empty($record['is_hidden']); ?>
                         <tr class="<?php echo $is_hidden ? 'calendari-record-hidden' : ''; ?>">
-                            <td><?php echo esc_html($record['aa_id']); ?></td>
+                            <td><?php echo esc_html(Calendari_Format::academic_year_label((string) $record['aa_id'])); ?></td>
                             <td><?php echo esc_html(Calendari_Format::month_name_with_year((string) $record['data'])); ?></td>
                             <td><?php echo esc_html(Calendari_Format::format_date($record['data'])); ?></td>
                             <td><?php echo esc_html($record['sede']); ?></td>
@@ -721,7 +721,7 @@ final class Calendari_Admin {
         check_admin_referer('calendari_degree_save', 'calendari_degree_nonce');
         $id = absint(wp_unslash($_POST['id'] ?? 0));
         $record = array(
-            'aa_id' => sanitize_text_field(wp_unslash($_POST['aa_id'] ?? '')),
+            'aa_id' => Calendari_Format::normalize_academic_year_id(sanitize_text_field(wp_unslash($_POST['aa_id'] ?? ''))),
             'data' => Calendari_Importer::normalize_date(wp_unslash($_POST['data'] ?? '')),
             'sede' => sanitize_text_field(wp_unslash($_POST['sede'] ?? '')),
         );
@@ -791,7 +791,7 @@ final class Calendari_Admin {
         <div class="calendari-card calendari-import-card">
             <div class="calendari-section-heading">
                 <h2><?php esc_html_e('Importa calendario esami', 'calendari'); ?></h2>
-                <p><?php esc_html_e('Upload a CSV or XLSX file. CDS_IDS is optional and can contain comma-separated course codes, for example M072,M070. GRUPPO is optional and creates a separate table for events with the same group name.', 'calendari'); ?></p>
+                <p><?php esc_html_e('Upload a CSV or XLSX file. AA_ID is the first year only, for example 2026; the interface displays the full academic year. CDS_IDS is optional and accepts comma-separated course codes, for example M072,M070. GRUPPO is optional and creates a separate table for matching events.', 'calendari'); ?></p>
                 <a href="<?php echo esc_url(CALENDARI_URL . 'examples/calendar-sample.csv'); ?>" download><?php esc_html_e('Scarica il modello CSV', 'calendari'); ?></a>
             </div>
             <form method="post" enctype="multipart/form-data">
@@ -841,7 +841,7 @@ final class Calendari_Admin {
 
     private function render_repository(?array $notice = null): void {
         $filters = array(
-            'aa_id' => sanitize_text_field($_GET['aa_id'] ?? ''),
+            'aa_id' => Calendari_Format::normalize_academic_year_id(sanitize_text_field($_GET['aa_id'] ?? '')) ,
             'tipo_corso' => sanitize_text_field($_GET['tipo_corso'] ?? ''),
             'gruppo' => sanitize_text_field($_GET['gruppo'] ?? ''),
             'tipo_prova' => sanitize_text_field($_GET['tipo_prova'] ?? ''),
@@ -887,7 +887,7 @@ final class Calendari_Admin {
         $has_filters = '' !== $filters['aa_id'] || '' !== $filters['tipo_corso'] || '' !== $filters['gruppo'] || '' !== $filters['tipo_prova'] || $filters['mese'] > 0;
 
         $aa_options = array_map(static function (string $value): array {
-            return array('value' => $value, 'label' => $value);
+            return array('value' => $value, 'label' => Calendari_Format::academic_year_label($value));
         }, $aa_values);
         $course_options = array_map(static function (string $value): array {
             return array('value' => $value, 'label' => $value);
@@ -941,7 +941,7 @@ final class Calendari_Admin {
                         </div>
                     </header>
                     <div class="calendari-degree-modal-fields calendari-exam-modal-fields">
-                        <label for="calendari-exam-modal-aa-id"><span>AA_ID</span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" required></label>
+                        <label for="calendari-exam-modal-aa-id"><span>AA_ID</span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" placeholder="2026" required></label>
                         <label for="calendari-exam-modal-course"><span>TIPO_CORSO</span><input type="text" id="calendari-exam-modal-course" name="tipo_corso" placeholder="MASTER, CP, CO, CDS" required></label>
                         <label for="calendari-exam-modal-cds-ids"><span>CDS_IDS (facoltativo)</span><input type="text" id="calendari-exam-modal-cds-ids" name="cds_ids" placeholder="M072,M070"></label>
                         <label for="calendari-exam-modal-group"><span><?php esc_html_e('Gruppo (facoltativo)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-group" name="gruppo" list="calendari-exam-group-options"><datalist id="calendari-exam-group-options"><?php foreach ($this->db->distinct_group_names() as $group_name) : ?><option value="<?php echo esc_attr($group_name); ?>"></option><?php endforeach; ?></datalist></label>
@@ -987,7 +987,7 @@ final class Calendari_Admin {
                     <?php foreach ($records as $record) : ?>
                         <?php $is_hidden = !empty($record['is_hidden']); ?>
                         <tr class="<?php echo $is_hidden ? 'calendari-record-hidden' : ''; ?>">
-                            <td><?php echo esc_html($record['aa_id']); ?></td>
+                            <td><?php echo esc_html(Calendari_Format::academic_year_label((string) $record['aa_id'])); ?></td>
                             <td><?php echo esc_html($record['tipo_corso']); ?></td>
                             <td class="calendari-course-codes-cell">
                                 <div class="calendari-course-codes-list">

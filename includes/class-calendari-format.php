@@ -98,6 +98,24 @@ final class Calendari_Format {
         return $date;
     }
 
+    public static function normalize_academic_year_id(string $value): string {
+        $value = trim(sanitize_text_field($value));
+        if (preg_match('/^(\d{4})(?:\s*[\/-]\s*\d{2,4})?$/u', $value, $matches)) {
+            return $matches[1];
+        }
+
+        return $value;
+    }
+
+    public static function academic_year_label(string $value): string {
+        $year_id = self::normalize_academic_year_id($value);
+        if (preg_match('/^\d{4}$/', $year_id)) {
+            return $year_id . '/' . (string) ((int) $year_id + 1);
+        }
+
+        return str_replace('-', '/', trim($value));
+    }
+
     public static function month_name(int $month, bool $standalone = false): string {
         $name = self::MONTH_NAMES[max(1, min(12, $month))];
 

@@ -36,7 +36,20 @@ final class Calendari_Degree_DB {
         ) {$charset_collate};";
 
         dbDelta($sql);
-        update_option('calendari_degree_db_version', CALENDARI_VERSION);
+        $migration_succeeded = true;
+        $years = $wpdb->get_results("SELECT id, aa_id FROM {$table}", ARRAY_A);
+        foreach ($years ?: array() as $year) {
+            $year_id = Calendari_Format::normalize_academic_year_id((string) $year['aa_id']);
+            if ($year_id === (string) $year['aa_id']) {
+                continue;
+            }
+            if (false === $wpdb->update($table, array('aa_id' => $year_id), array('id' => (int) $year['id']), array('%s'), array('%d'))) {
+                $migration_succeeded = false;
+            }
+        }
+        if ($migration_succeeded) {
+            update_option('calendari_degree_db_version', CALENDARI_VERSION);
+        }
     }
 
     public static function maybe_upgrade(): void {
@@ -51,12 +64,13 @@ final class Calendari_Degree_DB {
         if (null === $month) {
             return false;
         }
+        $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
 
         $now = current_time('mysql', true);
         $result = $this->wpdb->insert(
             $this->table,
             array(
-                'aa_id' => $record['aa_id'],
+                'aa_id' => $aa_id,
                 'mese' => $month,
                 'data' => $date,
                 'sede' => $record['sede'],
@@ -75,11 +89,12 @@ final class Calendari_Degree_DB {
         if (null === $month) {
             return false;
         }
+        $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
 
         return $this->wpdb->update(
             $this->table,
             array(
-                'aa_id' => $record['aa_id'],
+                'aa_id' => $aa_id,
                 'mese' => $month,
                 'data' => $date,
                 'sede' => $record['sede'],
@@ -113,6 +128,7 @@ final class Calendari_Degree_DB {
     }
 
     public function find_calendar(string $aa_id): array {
+        $aa_id = Calendari_Format::normalize_academic_year_id($aa_id);
         $sql = $this->wpdb->prepare(
             "SELECT * FROM {$this->table}
              WHERE aa_id = %s AND is_hidden = 0
@@ -182,7 +198,8 @@ final class Calendari_Degree_DB {
         foreach (array('aa_id', 'data', 'sede') as $field) {
             if (isset($filters[$field]) && '' !== (string) $filters[$field]) {
                 $where[] = "{$field} = %s";
-                $params[] = (string) $filters[$field];
+                $value = (string) $filters[$field];
+                $params[] = 'aa_id' === $field ? Calendari_Format::normalize_academic_year_id($value) : $value;
             }
         }
 

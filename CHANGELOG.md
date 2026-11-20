@@ -1,5 +1,19 @@
 # Changelog
 
+## v4.1.0 - 2026-11-20
+
+### Description
+Store academic-year IDs while displaying complete academic-year labels.
+
+### Type
+Minor
+
+### Notes
+- Normalize legacy YYYY/YYYY+1 academic-year values to the four-digit start-year ID during migration.
+- Accept legacy full-year inputs and shortcodes while storing and generating canonical IDs.
+- Reconstruct full academic-year labels across admin tables, filters, shortcode controls, and public calendars.
+
+
 ## v4.0.13 - 2026-11-20
 
 ### Description

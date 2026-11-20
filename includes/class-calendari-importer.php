@@ -122,7 +122,7 @@ final class Calendari_Importer {
         $prefix = $row_number ? sprintf(__('Riga %d:', 'calendari'), $row_number) . ' ' : '';
         $errors = array();
         $record = array(
-            'aa_id' => sanitize_text_field((string) ($values['AA_ID'] ?? '')),
+            'aa_id' => Calendari_Format::normalize_academic_year_id((string) ($values['AA_ID'] ?? '')),
             'tipo_corso' => sanitize_text_field((string) ($values['TIPO_CORSO'] ?? '')),
             'cds_ids' => Calendari_DB::normalize_course_ids((string) ($values['CDS_IDS'] ?? '')),
             'gruppo' => sanitize_text_field((string) ($values['GRUPPO'] ?? '')),

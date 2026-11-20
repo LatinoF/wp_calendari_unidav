@@ -65,28 +65,70 @@ final class Calendari_DB {
         if (in_array('cds_id', $record_columns, true)) {
             $wpdb->query("UPDATE {$table} SET cds_ids = cds_id WHERE cds_ids = '' AND cds_id IS NOT NULL");
         }
+        $migration_succeeded = true;
+        $legacy_tables = array(
+            $wpdb->prefix . 'calendari_course_groups',
+            $wpdb->prefix . 'calendari_course_group_members',
+            $wpdb->prefix . 'calendari_group_changes',
+        );
+        foreach ($legacy_tables as $legacy_table) {
+            if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($legacy_table))) !== $legacy_table) {
+                continue;
+            }
+            $legacy_columns = $wpdb->get_col("SHOW COLUMNS FROM {$legacy_table}", 0);
+            if (!in_array('aa_id', $legacy_columns, true)) {
+                continue;
+            }
+            $legacy_rows = $wpdb->get_results("SELECT id, aa_id FROM {$legacy_table}", ARRAY_A);
+            foreach ($legacy_rows ?: array() as $legacy_row) {
+                $legacy_year_id = Calendari_Format::normalize_academic_year_id((string) $legacy_row['aa_id']);
+                if ($legacy_year_id !== (string) $legacy_row['aa_id']
+                    && false === $wpdb->update($legacy_table, array('aa_id' => $legacy_year_id), array('id' => (int) $legacy_row['id']), array('%s'), array('%d'))
+                ) {
+                    $migration_succeeded = false;
+                }
+            }
+        }
         $records = $wpdb->get_results(
             "SELECT id, aa_id, tipo_corso, gruppo, data_esami, tipo_prova, sede FROM {$table}",
             ARRAY_A
         );
         foreach ($records ?: array() as $record) {
+            $year_id = Calendari_Format::normalize_academic_year_id((string) $record['aa_id']);
+            if ($year_id !== (string) $record['aa_id']) {
+                $updated_year = $wpdb->update(
+                    $table,
+                    array('aa_id' => $year_id),
+                    array('id' => (int) $record['id']),
+                    array('%s'),
+                    array('%d')
+                );
+                if (false === $updated_year) {
+                    $migration_succeeded = false;
+                    continue;
+                }
+            }
             $identity = array(
-                (string) $record['aa_id'],
+                $year_id,
                 (string) $record['tipo_corso'],
                 (string) ($record['gruppo'] ?? ''),
                 (string) $record['data_esami'],
                 (string) $record['tipo_prova'],
                 (string) $record['sede'],
             );
-            $wpdb->update(
+            if (false === $wpdb->update(
                 $table,
                 array('event_key' => hash('sha256', wp_json_encode($identity))),
                 array('id' => (int) $record['id']),
                 array('%s'),
                 array('%d')
-            );
+            )) {
+                $migration_succeeded = false;
+            }
         }
-        update_option('calendari_db_version', CALENDARI_VERSION);
+        if ($migration_succeeded) {
+            update_option('calendari_db_version', CALENDARI_VERSION);
+        }
     }
 
     public static function maybe_upgrade(): void {
@@ -102,11 +144,12 @@ final class Calendari_DB {
             return false;
         }
 
+        $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
         $gruppo = trim((string) ($record['gruppo'] ?? ''));
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $now = current_time('mysql', true);
         $identity = array(
-            (string) $record['aa_id'],
+            (string) $aa_id,
             (string) $record['tipo_corso'],
             $gruppo,
             $exam_date,
@@ -130,7 +173,7 @@ final class Calendari_DB {
                 tipo_prova = VALUES(tipo_prova),
                 sede = VALUES(sede),
                 updated_at = VALUES(updated_at)",
-            $record['aa_id'],
+            $aa_id,
             $record['tipo_corso'],
             $cds_ids,
             $gruppo ?: null,
@@ -160,10 +203,11 @@ final class Calendari_DB {
             return false;
         }
 
+        $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
         $gruppo = trim((string) ($record['gruppo'] ?? ''));
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $identity = array(
-            (string) $record['aa_id'],
+            (string) $aa_id,
             (string) $record['tipo_corso'],
             $gruppo,
             (string) $record['data_esami'],
@@ -175,7 +219,7 @@ final class Calendari_DB {
         $updated = $this->wpdb->update(
             $this->table,
             array(
-                'aa_id' => $record['aa_id'],
+                'aa_id' => $aa_id,
                 'tipo_corso' => $record['tipo_corso'],
                 'cds_ids' => $cds_ids,
                 'gruppo_id' => null,
@@ -221,6 +265,7 @@ final class Calendari_DB {
     }
 
     public function distinct_course_types(string $aa_id = ''): array {
+        $aa_id = Calendari_Format::normalize_academic_year_id($aa_id);
         $sql = "SELECT DISTINCT tipo_corso FROM {$this->table} WHERE tipo_corso <> ''";
         if ('' !== $aa_id) {
             $sql = $this->wpdb->prepare($sql . ' AND aa_id = %s', $aa_id);
@@ -230,6 +275,7 @@ final class Calendari_DB {
     }
 
     public function distinct_group_names(string $aa_id = '', string $tipo_corso = ''): array {
+        $aa_id = Calendari_Format::normalize_academic_year_id($aa_id);
         $where = array("gruppo IS NOT NULL", "gruppo <> ''");
         $params = array();
         if ('' !== $aa_id) {
@@ -256,6 +302,7 @@ final class Calendari_DB {
     }
 
     public function find_calendar(string $aa_id, string $tipo_corso, string $tipo_prova = '', string $gruppo = ''): array {
+        $aa_id = Calendari_Format::normalize_academic_year_id($aa_id);
         $where = 'e.aa_id = %s AND e.tipo_corso = %s AND e.is_hidden = 0';
         $params = array($aa_id, $tipo_corso);
         if ('' !== $tipo_prova) {
@@ -295,7 +342,8 @@ final class Calendari_DB {
         foreach (array('aa_id', 'tipo_corso') as $field) {
             if (isset($filters[$field]) && '' !== (string) $filters[$field]) {
                 $where[] = "{$field} = %s";
-                $params[] = (string) $filters[$field];
+                $value = (string) $filters[$field];
+                $params[] = 'aa_id' === $field ? Calendari_Format::normalize_academic_year_id($value) : $value;
             }
         }
         if (isset($filters['gruppo']) && '__ungrouped' !== $filters['gruppo'] && '' !== (string) $filters['gruppo']) {

@@ -33,7 +33,7 @@ final class Calendari_Shortcode {
         );
 
         $tipologia = strtolower(sanitize_key($attributes['tipologia']));
-        $aa_id = sanitize_text_field($attributes['aa_id']);
+        $aa_id = Calendari_Format::normalize_academic_year_id(sanitize_text_field($attributes['aa_id']));
         $gruppo = sanitize_text_field($attributes['gruppo']);
         $view = strtolower(sanitize_text_field($attributes['view']));
 
@@ -413,7 +413,7 @@ final class Calendari_Shortcode {
     }
 
     private function format_academic_year(string $aa_id): string {
-        return str_replace('-', '/', trim($aa_id));
+        return Calendari_Format::academic_year_label($aa_id);
     }
 
     private function format_course_title(string $tipo_corso): string {

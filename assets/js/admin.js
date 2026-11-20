@@ -556,9 +556,11 @@
             select.appendChild(placeholderOption);
 
             (Array.isArray(values) ? values : []).forEach(function (rawValue) {
-                var label = String(rawValue);
+                var isOptionObject = rawValue && 'object' === typeof rawValue;
+                var value = isOptionObject ? String(rawValue.value || '') : String(rawValue);
+                var label = isOptionObject ? String(rawValue.label || value) : value;
                 var option = document.createElement('option');
-                option.value = normalizeValues ? label.toLowerCase() : label;
+                option.value = normalizeValues ? value.toLowerCase() : value;
                 option.textContent = label;
                 select.appendChild(option);
             });
