@@ -206,6 +206,14 @@
     grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
 }
 
+.calendari-shortcode-builder-form {
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+}
+
+.calendari-shortcode-builder-form > label {
+    min-width: 0;
+}
+
 .calendari-group-form > h3 {
     color: var(--calendari-admin-ink);
     font-size: 1.05rem;
@@ -647,10 +655,14 @@
     width: 100%;
 }
 
+.calendari-admin-table .calendari-course-codes-column {
+    width: 20%;
+}
+
 .calendari-admin-table .calendari-actions-column {
-    max-width: 12%;
+    max-width: 14%;
     white-space: nowrap;
-    width: 8%;
+    width: 12%;
 }
 
 .calendari-admin-table th {
@@ -664,6 +676,11 @@
     text-transform: uppercase;
 }
 
+.calendari-admin-table th.calendari-actions-column,
+.calendari-admin-table td.calendari-actions-column {
+    text-align: center;
+}
+
 .calendari-admin-table thead tr {
     background: var(--calendari-admin-deep);
 }
@@ -672,7 +689,9 @@
     background: var(--calendari-admin-card);
     border-bottom: 1px solid var(--calendari-admin-line);
     color: var(--calendari-admin-ink);
-    padding: .65rem .75rem;
+    line-height: 1.3;
+    padding: .55rem .75rem;
+    vertical-align: middle;
 }
 
 .calendari-admin-table td.calendari-course-codes-cell {
@@ -680,15 +699,20 @@
 }
 
 .calendari-course-codes-list {
-    align-items: baseline;
+    align-items: center;
     column-gap: .65em;
     display: flex;
     flex-wrap: wrap;
     row-gap: .15em;
+    line-height: 1.3;
 }
 
 .calendari-course-codes-list span {
     white-space: nowrap;
+}
+
+.calendari-course-codes-list span:not(:last-child)::after {
+    content: ',';
 }
 
 .calendari-admin-table td.calendari-actions-column {
@@ -872,6 +896,7 @@
     display: flex;
     flex-wrap: nowrap;
     gap: .2rem;
+    justify-content: center;
 }
 
 .calendari-admin .calendari-icon-button {

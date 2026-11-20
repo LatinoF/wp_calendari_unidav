@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.0.6 - 2026-11-20
+
+### Description
+Align the admin tables and make the shortcode builder fit available width.
+
+### Type
+Patch
+
+### Notes
+- Center the exam Actions heading and controls in the same responsive column.
+- Match exam-table row spacing to the degree-session table while allowing course codes to wrap only between IDs.
+- Use a fluid shortcode-builder grid so fields share a row whenever the viewport allows.
+
 ## v4.0.5 - 2026-11-20
 
 ### Description

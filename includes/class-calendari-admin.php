@@ -333,7 +333,7 @@ final class Calendari_Admin {
                 <h2><?php esc_html_e('Crea il tuo shortcode', 'calendari'); ?></h2>
                 <p><?php esc_html_e('Imposta i parametri e genera lo shortcode da inserire nella pagina del calendario.', 'calendari'); ?></p>
             </div>
-            <form method="get" id="calendari-shortcode-builder-form" class="calendari-builder-form">
+            <form method="get" id="calendari-shortcode-builder-form" class="calendari-builder-form calendari-shortcode-builder-form">
                 <input type="hidden" name="page" value="calendari">
                 <input type="hidden" name="tab" value="shortcode">
                 <input type="hidden" id="calendari-shortcode-preview-mode" name="preview" value="1">
@@ -981,7 +981,7 @@ final class Calendari_Admin {
         ?>
         <div class="calendari-admin-table-wrap">
             <table class="calendari-admin-table">
-                <colgroup><col><col><col><col><col><col><col><col><col><col class="calendari-actions-column"></colgroup>
+                <colgroup><col><col><col class="calendari-course-codes-column"><col><col><col><col><col><col><col class="calendari-actions-column"></colgroup>
                 <thead><tr><th>AA_ID</th><th><?php esc_html_e('Tipo corso', 'calendari'); ?></th><th>CDS_IDS</th><th><?php esc_html_e('Gruppo', 'calendari'); ?></th><th><?php esc_html_e('Mese', 'calendari'); ?></th><th><?php esc_html_e('Data esame', 'calendari'); ?></th><th><?php esc_html_e('Termine consegna PW', 'calendari'); ?></th><th><?php esc_html_e('Tipo prova', 'calendari'); ?></th><th><?php esc_html_e('Sede', 'calendari'); ?></th><th class="calendari-actions-column"><?php esc_html_e('Azioni', 'calendari'); ?></th></tr></thead>
                 <tbody>
                     <?php foreach ($records as $record) : ?>
