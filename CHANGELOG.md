@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.0.12 - 2026-11-20
+
+### Description
+Allow editing course IDs and groups on past exam records.
+
+### Type
+Patch
+
+### Notes
+- Remove the legacy historical-record guard that ignored modal changes to `CDS_IDS` and `GRUPPO`.
+- Keep direct degree-session editing unchanged; its modal save was verified separately.
+
+
 ## v4.0.11 - 2026-11-20
 
 ### Description

@@ -161,13 +161,7 @@ final class Calendari_DB {
         }
 
         $gruppo = trim((string) ($record['gruppo'] ?? ''));
-        $is_historical = (string) $existing['data_esami'] < current_time('Y-m-d');
-        if ($is_historical) {
-            $gruppo = (string) ($existing['gruppo'] ?? '');
-        }
-        $cds_ids = $is_historical
-            ? (string) ($existing['cds_ids'] ?? '')
-            : self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
+        $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $identity = array(
             (string) $record['aa_id'],
             (string) $record['tipo_corso'],
