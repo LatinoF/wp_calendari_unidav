@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.0.10 - 2026-11-20
+
+### Description
+Correct the plugin version metadata used by WordPress after updates.
+
+### Type
+Patch
+
+### Notes
+- Set the plugin header and runtime version to v4.0.10 so WordPress no longer repeats the same update offer.
+
 ## v4.0.9 - 2026-11-20
 
 ### Description
