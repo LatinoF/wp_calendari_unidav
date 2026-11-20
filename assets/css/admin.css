@@ -683,9 +683,9 @@
 }
 
 .calendari-admin-table .calendari-actions-column {
-    max-width: 14%;
+    min-width: max-content;
     white-space: nowrap;
-    width: 10%;
+    width: 1%;
 }
 
 .calendari-admin-table th {
@@ -920,7 +920,7 @@
     align-items: center;
     display: flex;
     flex-wrap: nowrap;
-    gap: .2rem;
+    gap: .45rem;
     justify-content: flex-start;
 }
 
@@ -1059,16 +1059,8 @@
     width: 100%;
 }
 
-.calendari-admin .calendari-degree-modal-fields .calendari-course-ids-input {
-    height: auto;
-    line-height: 1.4;
-    min-height: 6rem;
-    resize: vertical;
-}
-
 .calendari-admin .calendari-degree-modal-fields input:focus,
-.calendari-admin .calendari-degree-modal-fields select:focus,
-.calendari-admin .calendari-degree-modal-fields .calendari-course-ids-input:focus {
+.calendari-admin .calendari-degree-modal-fields select:focus {
     border-color: var(--calendari-admin-accent);
     box-shadow: 0 0 0 3px color-mix(in srgb, var(--calendari-admin-accent) 18%, transparent);
     outline: 0;

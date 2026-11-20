@@ -1,5 +1,19 @@
 # Changelog
 
+## v4.0.8 - 2026-11-20
+
+### Description
+Tighten the Actions column and simplify CDS_IDS editing.
+
+### Type
+Patch
+
+### Notes
+- Reduce empty space in the Actions column and increase the gap between controls.
+- Use a single-line comma-separated CDS_IDS editor with the requested optional label.
+- Preserve compact exam rows and the responsive shortcode field layout.
+
+
 ## v4.0.7 - 2026-11-20
 
 ### Description
