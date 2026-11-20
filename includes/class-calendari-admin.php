@@ -946,11 +946,9 @@ final class Calendari_Admin {
                         <label for="calendari-exam-modal-aa-id"><span>AA_ID</span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" placeholder="2026" required></label>
                         <label for="calendari-exam-modal-course"><span><?php esc_html_e('Tipo di corso', 'calendari'); ?></span><select id="calendari-exam-modal-course" name="tipo_corso" required>
                             <option value=""><?php esc_html_e('Seleziona un tipo di corso', 'calendari'); ?></option>
-                            <option value="CO"><?php esc_html_e('Corsi Online', 'calendari'); ?></option>
-                            <option value="CDS"><?php esc_html_e('Corsi di Studio', 'calendari'); ?></option>
-                            <option value="M"><?php esc_html_e('Master', 'calendari'); ?></option>
-                            <option value="CP"><?php esc_html_e('Corsi di Perfezionamento', 'calendari'); ?></option>
-                            <option value="AF"><?php esc_html_e('Corsi di Alta Formazione', 'calendari'); ?></option>
+                            <?php foreach (Calendari_Format::course_type_labels() as $course_code => $course_label) : ?>
+                                <option value="<?php echo esc_attr($course_code); ?>"><?php echo esc_html($course_label); ?></option>
+                            <?php endforeach; ?>
                         </select></label>
                         <label for="calendari-exam-modal-cds-ids"><span>CDS_IDS (facoltativo)</span><input type="text" id="calendari-exam-modal-cds-ids" name="cds_ids" placeholder="M072,M070"></label>
                         <label for="calendari-exam-modal-group"><span><?php esc_html_e('Gruppo (facoltativo)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-group" name="gruppo" list="calendari-exam-group-options"><datalist id="calendari-exam-group-options"><?php foreach ($this->db->distinct_group_names() as $group_name) : ?><option value="<?php echo esc_attr($group_name); ?>"></option><?php endforeach; ?></datalist></label>

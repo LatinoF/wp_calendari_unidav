@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.2.2 - 2026-11-20
+
+### Description
+Sort course-type dropdown options alphabetically by their visible labels.
+
+### Type
+Patch
+
+### Notes
+- Apply the same alphabetical order to the exam modal, shortcode builder, and database filters.
+- Generate the modal options from the shared course-type label list.
+
 ## v4.2.1 - 2026-11-20
 
 ### Description

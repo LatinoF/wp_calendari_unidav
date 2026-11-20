@@ -118,11 +118,11 @@ final class Calendari_Format {
 
     public static function course_type_labels(): array {
         return array(
-            'CO' => __('Corsi Online', 'calendari'),
-            'CDS' => __('Corsi di Studio', 'calendari'),
-            'M' => __('Master', 'calendari'),
-            'CP' => __('Corsi di Perfezionamento', 'calendari'),
             'AF' => __('Corsi di Alta Formazione', 'calendari'),
+            'CP' => __('Corsi di Perfezionamento', 'calendari'),
+            'CDS' => __('Corsi di Studio', 'calendari'),
+            'CO' => __('Corsi Online', 'calendari'),
+            'M' => __('Master', 'calendari'),
         );
     }
 
