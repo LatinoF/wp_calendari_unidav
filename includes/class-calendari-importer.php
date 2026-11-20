@@ -123,7 +123,7 @@ final class Calendari_Importer {
         $errors = array();
         $record = array(
             'aa_id' => Calendari_Format::normalize_academic_year_id((string) ($values['AA_ID'] ?? '')),
-            'tipo_corso' => sanitize_text_field((string) ($values['TIPO_CORSO'] ?? '')),
+            'tipo_corso' => Calendari_Format::normalize_course_type((string) ($values['TIPO_CORSO'] ?? '')),
             'cds_ids' => Calendari_DB::normalize_course_ids((string) ($values['CDS_IDS'] ?? '')),
             'gruppo' => sanitize_text_field((string) ($values['GRUPPO'] ?? '')),
             'data_apertura_prenotazioni' => self::normalize_date($values['DATA_APERTURA_PRENOTAZIONI'] ?? ''),
@@ -138,6 +138,9 @@ final class Calendari_Importer {
             if ('' === $record[$key]) {
                 $errors[] = $prefix . sprintf(__('%s è obbligatorio.', 'calendari'), $label);
             }
+        }
+        if ('' !== $record['tipo_corso'] && !isset(Calendari_Format::course_type_labels()[$record['tipo_corso']])) {
+            $errors[] = $prefix . __('TIPO_CORSO deve corrispondere a un tipo di corso riconosciuto.', 'calendari');
         }
 
         foreach (array(

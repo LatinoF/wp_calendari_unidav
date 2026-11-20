@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.2.1 - 2026-11-20
+
+### Description
+Show descriptive course-type names consistently throughout the interface.
+
+### Type
+Patch
+
+### Notes
+- Display full course-type labels in the shortcode builder, exam filters, repository table, and public calendar headings.
+- Normalize case-insensitive course codes and full names from imports to canonical codes while keeping legacy `MASTER` records and shortcodes compatible.
+- Update the sample CSV to use the canonical `M` course code.
+
 ## v4.2.0 - 2026-11-20
 
 ### Description

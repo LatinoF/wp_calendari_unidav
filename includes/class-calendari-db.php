@@ -145,12 +145,13 @@ final class Calendari_DB {
         }
 
         $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
+        $tipo_corso = Calendari_Format::normalize_course_type((string) ($record['tipo_corso'] ?? ''));
         $gruppo = trim((string) ($record['gruppo'] ?? ''));
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $now = current_time('mysql', true);
         $identity = array(
             (string) $aa_id,
-            (string) $record['tipo_corso'],
+            $tipo_corso,
             $gruppo,
             $exam_date,
             (string) ($record['tipo_prova'] ?? ''),
@@ -174,7 +175,7 @@ final class Calendari_DB {
                 sede = VALUES(sede),
                 updated_at = VALUES(updated_at)",
             $aa_id,
-            $record['tipo_corso'],
+            $tipo_corso,
             $cds_ids,
             $gruppo ?: null,
             $month,
@@ -204,11 +205,12 @@ final class Calendari_DB {
         }
 
         $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
+        $tipo_corso = Calendari_Format::normalize_course_type((string) ($record['tipo_corso'] ?? ''));
         $gruppo = trim((string) ($record['gruppo'] ?? ''));
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $identity = array(
             (string) $aa_id,
-            (string) $record['tipo_corso'],
+            $tipo_corso,
             $gruppo,
             (string) $record['data_esami'],
             (string) ($record['tipo_prova'] ?? ''),
@@ -220,7 +222,7 @@ final class Calendari_DB {
             $this->table,
             array(
                 'aa_id' => $aa_id,
-                'tipo_corso' => $record['tipo_corso'],
+                'tipo_corso' => $tipo_corso,
                 'cds_ids' => $cds_ids,
                 'gruppo_id' => null,
                 'gruppo' => $gruppo ?: null,
@@ -283,8 +285,7 @@ final class Calendari_DB {
             $params[] = $aa_id;
         }
         if ('' !== $tipo_corso) {
-            $where[] = 'tipo_corso = %s';
-            $params[] = $tipo_corso;
+            $this->append_course_type_condition($tipo_corso, $where, $params);
         }
         $sql = "SELECT DISTINCT gruppo FROM {$this->table} WHERE " . implode(' AND ', $where) . ' ORDER BY gruppo ASC';
         if ($params) {
@@ -303,20 +304,21 @@ final class Calendari_DB {
 
     public function find_calendar(string $aa_id, string $tipo_corso, string $tipo_prova = '', string $gruppo = ''): array {
         $aa_id = Calendari_Format::normalize_academic_year_id($aa_id);
-        $where = 'e.aa_id = %s AND e.tipo_corso = %s AND e.is_hidden = 0';
-        $params = array($aa_id, $tipo_corso);
+        $where = array('e.aa_id = %s', 'e.is_hidden = 0');
+        $params = array($aa_id);
+        $this->append_course_type_condition($tipo_corso, $where, $params, 'e.tipo_corso');
         if ('' !== $tipo_prova) {
-            $where .= ' AND e.tipo_prova = %s';
+            $where[] = 'e.tipo_prova = %s';
             $params[] = $tipo_prova;
         }
         if ('__ungrouped' !== $gruppo && '' !== $gruppo) {
-            $where .= ' AND e.gruppo = %s';
+            $where[] = 'e.gruppo = %s';
             $params[] = $gruppo;
         }
         $sql = $this->wpdb->prepare(
             "SELECT e.*, e.cds_ids AS course_codes
              FROM {$this->table} e
-             WHERE {$where}
+             WHERE " . implode(' AND ', $where) . "
              ORDER BY COALESCE(e.gruppo, '') ASC, e.data_esami ASC, e.tipo_prova ASC, e.id ASC",
             ...$params
         );
@@ -339,12 +341,14 @@ final class Calendari_DB {
     private function build_where(array $filters): array {
         $where = array('1=1');
         $params = array();
-        foreach (array('aa_id', 'tipo_corso') as $field) {
+        foreach (array('aa_id') as $field) {
             if (isset($filters[$field]) && '' !== (string) $filters[$field]) {
                 $where[] = "{$field} = %s";
-                $value = (string) $filters[$field];
-                $params[] = 'aa_id' === $field ? Calendari_Format::normalize_academic_year_id($value) : $value;
+                $params[] = Calendari_Format::normalize_academic_year_id((string) $filters[$field]);
             }
+        }
+        if (isset($filters['tipo_corso']) && '' !== (string) $filters['tipo_corso']) {
+            $this->append_course_type_condition((string) $filters['tipo_corso'], $where, $params);
         }
         if (isset($filters['gruppo']) && '__ungrouped' !== $filters['gruppo'] && '' !== (string) $filters['gruppo']) {
             $where[] = 'gruppo = %s';
@@ -362,6 +366,24 @@ final class Calendari_DB {
             $params[] = (int) $filters['mese'];
         }
         return array(implode(' AND ', $where), $params);
+    }
+
+    private function append_course_type_condition(string $value, array &$where, array &$params, string $column = 'tipo_corso'): void {
+        $course_type = Calendari_Format::normalize_course_type($value);
+        $storage_values = array($course_type);
+        if ('M' === $course_type) {
+            $storage_values[] = 'MASTER';
+        }
+        $labels = Calendari_Format::course_type_labels();
+        if (isset($labels[$course_type])) {
+            $storage_values[] = $labels[$course_type];
+        }
+        $storage_values = array_values(array_unique(array_map('strtoupper', $storage_values)));
+        $placeholders = implode(', ', array_fill(0, count($storage_values), '%s'));
+        $where[] = 'UPPER(' . $column . ') IN (' . $placeholders . ')';
+        foreach ($storage_values as $storage_value) {
+            $params[] = $storage_value;
+        }
     }
 
     public static function normalize_course_ids(string $value): string {

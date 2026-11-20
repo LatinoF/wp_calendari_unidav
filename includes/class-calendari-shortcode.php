@@ -46,9 +46,9 @@ final class Calendari_Shortcode {
             return $this->render_degree_calendar($aa_id, $view);
         }
 
-        $tipo_corso = strtolower(sanitize_text_field($attributes['tipo_corso']));
+        $tipo_corso = Calendari_Format::normalize_course_type(sanitize_text_field($attributes['tipo_corso']));
         $mostra_tipo_prova = strtolower(trim(sanitize_text_field($attributes['mostra_tipo_prova'])));
-        $is_cds_course = 'cds' === $tipo_corso;
+        $is_cds_course = 'CDS' === $tipo_corso;
         $show_tipo_prova = $is_cds_course && 'mostra' === $mostra_tipo_prova;
         $filtro_tipo_prova = strtolower(trim(sanitize_text_field($attributes['filtro_tipo_prova'])));
         if (!$is_cds_course) {
@@ -417,15 +417,7 @@ final class Calendari_Shortcode {
     }
 
     private function format_course_title(string $tipo_corso): string {
-        return match (strtoupper(trim($tipo_corso))) {
-            'CP' => __('Corsi di perfezionamento', 'calendari'),
-            'CO' => __('Corsi online', 'calendari'),
-            'M' => __('Master', 'calendari'),
-            'MASTER' => __('Master', 'calendari'),
-            'CDS' => __('Corsi di studio', 'calendari'),
-            'AF' => __('Corsi di alta formazione', 'calendari'),
-            default => strtoupper(trim($tipo_corso)),
-        };
+        return Calendari_Format::course_type_label($tipo_corso);
     }
 
     private function unique_cds_ids(array $records): array {
@@ -452,6 +444,6 @@ final class Calendari_Shortcode {
     }
 
     private function should_show_cds_pills(string $tipo_corso): bool {
-        return in_array(strtoupper(trim($tipo_corso)), array('M', 'MASTER', 'CO', 'CP'), true);
+        return in_array(Calendari_Format::normalize_course_type($tipo_corso), array('M', 'CO', 'CP', 'AF'), true);
     }
 }

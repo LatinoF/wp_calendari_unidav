@@ -875,7 +875,14 @@
             if (record) {
                 examSessionFields.aaId.value = record.aaId;
                 var courseCode = record.course.trim().toUpperCase();
-                examSessionFields.course.value = 'MASTER' === courseCode ? 'M' : courseCode;
+                var legacyCourseTypes = {
+                    'CORSI ONLINE': 'CO',
+                    'CORSI DI STUDIO': 'CDS',
+                    'MASTER': 'M',
+                    'CORSI DI PERFEZIONAMENTO': 'CP',
+                    'CORSI DI ALTA FORMAZIONE': 'AF'
+                };
+                examSessionFields.course.value = legacyCourseTypes[courseCode] || courseCode;
                 examSessionFields.courseIds.value = record.courseIds;
                 examSessionFields.group.value = record.group;
                 examSessionFields.bookingOpen.value = record.bookingOpen;

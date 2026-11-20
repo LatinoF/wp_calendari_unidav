@@ -116,6 +116,64 @@ final class Calendari_Format {
         return str_replace('-', '/', trim($value));
     }
 
+    public static function course_type_labels(): array {
+        return array(
+            'CO' => __('Corsi Online', 'calendari'),
+            'CDS' => __('Corsi di Studio', 'calendari'),
+            'M' => __('Master', 'calendari'),
+            'CP' => __('Corsi di Perfezionamento', 'calendari'),
+            'AF' => __('Corsi di Alta Formazione', 'calendari'),
+        );
+    }
+
+    public static function normalize_course_type(string $value): string {
+        $value = trim(sanitize_text_field($value));
+        $value = preg_replace('/\s+/u', ' ', $value) ?? $value;
+        $value = strtoupper($value);
+
+        $aliases = array(
+            'CO' => 'CO',
+            'CORSI ONLINE' => 'CO',
+            'CDS' => 'CDS',
+            'CORSI DI STUDIO' => 'CDS',
+            'M' => 'M',
+            'MASTER' => 'M',
+            'CP' => 'CP',
+            'CORSI DI PERFEZIONAMENTO' => 'CP',
+            'AF' => 'AF',
+            'CORSI DI ALTA FORMAZIONE' => 'AF',
+        );
+
+        return $aliases[$value] ?? $value;
+    }
+
+    public static function course_type_label(string $value): string {
+        $course_type = self::normalize_course_type($value);
+        $labels = self::course_type_labels();
+
+        return $labels[$course_type] ?? __('Tipo di corso non riconosciuto', 'calendari');
+    }
+
+    public static function course_type_options(array $values): array {
+        $labels = self::course_type_labels();
+        $available = array();
+        foreach ($values as $value) {
+            $course_type = self::normalize_course_type((string) $value);
+            if (isset($labels[$course_type])) {
+                $available[$course_type] = true;
+            }
+        }
+
+        $options = array();
+        foreach ($labels as $course_type => $label) {
+            if (isset($available[$course_type])) {
+                $options[] = array('value' => $course_type, 'label' => $label);
+            }
+        }
+
+        return $options;
+    }
+
     public static function month_name(int $month, bool $standalone = false): string {
         $name = self::MONTH_NAMES[max(1, min(12, $month))];
 
