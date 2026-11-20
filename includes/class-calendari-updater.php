@@ -14,6 +14,7 @@ final class Calendari_Updater {
     public function __construct(string $repository, string $plugin_file) {
         $this->repository = $repository;
         $this->plugin_file = $plugin_file;
+        $this->synchronize_update_caches();
         add_filter('pre_set_site_transient_update_plugins', array($this, 'check_for_update'));
         add_filter('upgrader_pre_install', array($this, 'remember_activation_before_upgrade'), 9, 2);
         add_action('upgrader_process_complete', array($this, 'restore_activation_after_upgrade'), 10, 2);
@@ -65,6 +66,17 @@ final class Calendari_Updater {
             require_once ABSPATH . 'wp-admin/includes/plugin.php';
         }
         activate_plugin($plugin_basename, '', $network_wide);
+    }
+
+    private function synchronize_update_caches(): void {
+        $cached_version = (string) get_option('calendari_update_cache_version', '');
+        if (CALENDARI_VERSION === $cached_version) {
+            return;
+        }
+
+        delete_site_transient('update_plugins');
+        delete_transient('calendari_github_latest_release');
+        update_option('calendari_update_cache_version', CALENDARI_VERSION);
     }
 
     public function check_for_update(mixed $transient): mixed {

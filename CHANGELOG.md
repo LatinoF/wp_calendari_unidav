@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.0.13 - 2026-11-20
+
+### Description
+Invalidate stale update metadata when a new plugin version loads.
+
+### Type
+Patch
+
+### Notes
+- Clear WordPress and GitHub update transients once when the installed Calendari version changes.
+- Register the GitHub updater in cron as well as admin requests.
+
+
 ## v4.0.12 - 2026-11-20
 
 ### Description
