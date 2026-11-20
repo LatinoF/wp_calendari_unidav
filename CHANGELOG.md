@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.2.0 - 2026-11-20
+
+### Description
+Add fixed course-type choices with descriptive labels to the exam-session modal.
+
+### Type
+Minor
+
+### Notes
+- Store the selected course-type codes while showing their full Italian descriptions in the add/edit modal.
+- Support the `M` and `AF` codes in public calendar headings and keep legacy `MASTER` records editable.
+
 ## v4.1.0 - 2026-11-20
 
 ### Description

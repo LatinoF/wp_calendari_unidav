@@ -420,8 +420,10 @@ final class Calendari_Shortcode {
         return match (strtoupper(trim($tipo_corso))) {
             'CP' => __('Corsi di perfezionamento', 'calendari'),
             'CO' => __('Corsi online', 'calendari'),
+            'M' => __('Master', 'calendari'),
             'MASTER' => __('Master', 'calendari'),
             'CDS' => __('Corsi di studio', 'calendari'),
+            'AF' => __('Corsi di alta formazione', 'calendari'),
             default => strtoupper(trim($tipo_corso)),
         };
     }
@@ -450,6 +452,6 @@ final class Calendari_Shortcode {
     }
 
     private function should_show_cds_pills(string $tipo_corso): bool {
-        return in_array(strtoupper(trim($tipo_corso)), array('MASTER', 'CO', 'CP'), true);
+        return in_array(strtoupper(trim($tipo_corso)), array('M', 'MASTER', 'CO', 'CP'), true);
     }
 }

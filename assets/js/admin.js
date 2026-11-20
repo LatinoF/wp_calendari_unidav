@@ -874,7 +874,8 @@
             examSessionTitle.textContent = record ? 'Modifica Appello' : 'Nuovo Appello';
             if (record) {
                 examSessionFields.aaId.value = record.aaId;
-                examSessionFields.course.value = record.course;
+                var courseCode = record.course.trim().toUpperCase();
+                examSessionFields.course.value = 'MASTER' === courseCode ? 'M' : courseCode;
                 examSessionFields.courseIds.value = record.courseIds;
                 examSessionFields.group.value = record.group;
                 examSessionFields.bookingOpen.value = record.bookingOpen;

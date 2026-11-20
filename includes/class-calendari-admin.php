@@ -673,6 +673,13 @@ final class Calendari_Admin {
             $values[$header] = sanitize_text_field(wp_unslash($_POST[strtolower($header)] ?? ''));
         }
 
+        if (!in_array(strtoupper($values['TIPO_CORSO']), array('CO', 'CDS', 'M', 'CP', 'AF'), true)) {
+            $this->redirect_with_notice(
+                array('messages' => array(__('Seleziona un tipo di corso valido.', 'calendari'))),
+                array('tab' => 'database_esami')
+            );
+        }
+
         $validation = Calendari_Importer::validate_values($values);
         if ($validation['errors']) {
             $this->redirect_with_notice(array('messages' => $validation['errors']), array('tab' => 'database_esami'));
@@ -942,7 +949,14 @@ final class Calendari_Admin {
                     </header>
                     <div class="calendari-degree-modal-fields calendari-exam-modal-fields">
                         <label for="calendari-exam-modal-aa-id"><span>AA_ID</span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" placeholder="2026" required></label>
-                        <label for="calendari-exam-modal-course"><span>TIPO_CORSO</span><input type="text" id="calendari-exam-modal-course" name="tipo_corso" placeholder="MASTER, CP, CO, CDS" required></label>
+                        <label for="calendari-exam-modal-course"><span><?php esc_html_e('Tipo di corso', 'calendari'); ?></span><select id="calendari-exam-modal-course" name="tipo_corso" required>
+                            <option value=""><?php esc_html_e('Seleziona un tipo di corso', 'calendari'); ?></option>
+                            <option value="CO"><?php esc_html_e('Corsi Online', 'calendari'); ?></option>
+                            <option value="CDS"><?php esc_html_e('Corsi di Studio', 'calendari'); ?></option>
+                            <option value="M"><?php esc_html_e('Master', 'calendari'); ?></option>
+                            <option value="CP"><?php esc_html_e('Corsi di Perfezionamento', 'calendari'); ?></option>
+                            <option value="AF"><?php esc_html_e('Corsi di Alta Formazione', 'calendari'); ?></option>
+                        </select></label>
                         <label for="calendari-exam-modal-cds-ids"><span>CDS_IDS (facoltativo)</span><input type="text" id="calendari-exam-modal-cds-ids" name="cds_ids" placeholder="M072,M070"></label>
                         <label for="calendari-exam-modal-group"><span><?php esc_html_e('Gruppo (facoltativo)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-group" name="gruppo" list="calendari-exam-group-options"><datalist id="calendari-exam-group-options"><?php foreach ($this->db->distinct_group_names() as $group_name) : ?><option value="<?php echo esc_attr($group_name); ?>"></option><?php endforeach; ?></datalist></label>
                         <label for="calendari-exam-modal-booking-open"><span>DATA_APERTURA_PRENOTAZIONI</span><input type="date" id="calendari-exam-modal-booking-open" name="data_apertura_prenotazioni" required></label>
