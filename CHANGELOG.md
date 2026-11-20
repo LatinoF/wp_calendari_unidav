@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.0.4 - 2026-11-20
+
+### Description
+Expand the admin workspace fluidly and make course-code lists wrap naturally.
+
+### Type
+Patch
+
+### Notes
+- Use the available WordPress admin content width instead of a fixed maximum.
+- Let backend forms, filters, tables, and dialogs adapt to the expanded space.
+- Keep each CDS ID intact and wrap the list between IDs only when needed.
+
 ## v4.0.3 - 2026-11-19
 
 ### Description

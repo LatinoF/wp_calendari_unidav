@@ -9,9 +9,10 @@
     --calendari-admin-line: color-mix(in srgb, var(--calendari-admin-accent) 18%, white);
     --calendari-admin-card: color-mix(in srgb, var(--calendari-admin-accent) 1.5%, white);
     --calendari-admin-contrast: color-mix(in srgb, var(--calendari-admin-accent) 4%, white);
-    max-width: 1180px;
+    min-width: 0;
     color: var(--calendari-admin-ink);
     font-family: "Nunito", system-ui, -apple-system, sans-serif;
+    width: auto;
 }
 
 .calendari-admin *,
@@ -142,7 +143,7 @@
     align-items: start;
     display: grid;
     gap: 2rem;
-    grid-template-columns: minmax(15rem, .8fr) minmax(22rem, 1.2fr);
+    grid-template-columns: minmax(0, .8fr) minmax(0, 1.2fr);
 }
 
 .calendari-import-card form {
@@ -152,7 +153,7 @@
     border-radius: 12px;
     display: grid;
     gap: 1rem;
-    grid-template-columns: minmax(0, 1fr) 8rem;
+    grid-template-columns: minmax(0, 1fr) auto;
     justify-content: stretch;
     padding: .75rem;
 }
@@ -194,15 +195,15 @@
     font-weight: 700;
     height: var(--calendari-control-height);
     justify-self: start;
-    min-width: 8rem;
-    width: 8rem;
+    min-width: 0;
+    white-space: nowrap;
 }
 
 .calendari-builder-form,
 .calendari-settings-form {
     display: grid;
     gap: 1rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
 }
 
 .calendari-group-form > h3 {
@@ -228,26 +229,6 @@
     display: flex;
     flex-wrap: wrap;
     gap: .65rem;
-}
-
-.calendari-groups-table {
-    min-width: 880px;
-}
-
-.calendari-group-history {
-    border-top: 1px solid var(--calendari-admin-line);
-    margin-top: 1.4rem;
-    padding-top: 1.1rem;
-}
-
-.calendari-group-history h3 {
-    color: var(--calendari-admin-deep);
-    font-size: 1rem;
-    margin: 0 0 .75rem;
-}
-
-.calendari-group-history-table {
-    min-width: 760px;
 }
 
 .calendari-setting-control {
@@ -432,15 +413,15 @@
     box-shadow: 0 14px 34px rgb(0 0 0 / 8%);
     grid-column: auto;
     margin: 0;
-    max-height: calc(100vh - 72px);
-    max-width: min(420px, calc(100vw - 48px));
+    max-height: calc(100vh - 4.5rem);
+    max-width: calc(100vw - 3rem);
     overflow-y: auto;
     pointer-events: auto;
     position: fixed;
-    right: 24px;
-    top: 48px;
+    right: 1.5rem;
+    top: 3rem;
     transition: opacity .22s ease, transform .22s ease;
-    width: 420px;
+    width: min(26rem, calc(100vw - 3rem));
     z-index: 100000;
 }
 
@@ -651,6 +632,7 @@
 
 .calendari-admin-table-wrap {
     overflow-x: auto;
+    width: 100%;
 }
 
 .calendari-admin-table {
@@ -659,17 +641,16 @@
     border-collapse: separate;
     border-radius: 10px;
     border-spacing: 0;
-    min-width: 760px;
+    min-width: 100%;
     overflow: hidden;
     table-layout: auto;
     width: 100%;
 }
 
 .calendari-admin-table .calendari-actions-column {
-    max-width: 112px;
-    min-width: 112px;
+    max-width: 12%;
     white-space: nowrap;
-    width: 112px;
+    width: 8%;
 }
 
 .calendari-admin-table th {
@@ -695,9 +676,19 @@
 }
 
 .calendari-admin-table td.calendari-course-codes-cell {
-    max-width: 10rem;
-    overflow-wrap: anywhere;
     white-space: normal;
+}
+
+.calendari-course-codes-list {
+    align-items: baseline;
+    column-gap: .65em;
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: .15em;
+}
+
+.calendari-course-codes-list span {
+    white-space: nowrap;
 }
 
 .calendari-admin-table td.calendari-actions-column {
@@ -730,8 +721,9 @@
 .calendari-edit-form {
     display: grid;
     gap: 1rem;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    max-width: 760px;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 19rem), 1fr));
+    max-width: 100%;
+    width: 100%;
 }
 
 .calendari-edit-form label {
@@ -857,10 +849,10 @@
 
 @media (max-width: 782px) {
     .calendari-status-notice {
-        max-width: calc(100vw - 24px);
-        right: 12px;
-        top: 56px;
-        width: calc(100vw - 24px);
+        max-width: calc(100vw - 1.5rem);
+        right: .75rem;
+        top: 3.5rem;
+        width: calc(100vw - 1.5rem);
     }
 }
 
@@ -934,11 +926,11 @@
     border-radius: 18px;
     box-shadow: 0 28px 80px rgb(9 30 44 / 26%);
     color: var(--calendari-admin-ink);
-    max-height: min(86vh, 760px);
-    max-width: calc(100vw - 32px);
+    max-height: 86vh;
+    max-width: 92vw;
     overflow: auto;
     padding: 0;
-    width: min(540px, calc(100vw - 32px));
+    width: min(92vw, 44rem);
 }
 
 .calendari-degree-modal::backdrop {
@@ -986,7 +978,7 @@
 }
 
 .calendari-exam-modal {
-    width: min(760px, calc(100vw - 32px));
+    width: min(94vw, 72rem);
 }
 
 .calendari-exam-modal-fields {

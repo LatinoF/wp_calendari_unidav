@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Calendari
  * Description: Importa i calendari accademici e visualizza calendari filtrabili tramite shortcode.
- * Version: 4.0.3
+ * Version: 4.0.4
  * Update URI: https://github.com/LatinoF/wp_calendari_unidav
  * Requires at least: 6.0
  * Requires PHP: 8.0
@@ -21,7 +21,7 @@ if (defined('CALENDARI_FILE')) {
     return;
 }
 
-define('CALENDARI_VERSION', '4.0.3');
+define('CALENDARI_VERSION', '4.0.4');
 define('CALENDARI_FILE', __FILE__);
 define('CALENDARI_DIR', plugin_dir_path(__FILE__));
 define('CALENDARI_URL', plugin_dir_url(__FILE__));

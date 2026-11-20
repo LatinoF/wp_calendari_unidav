@@ -989,7 +989,14 @@ final class Calendari_Admin {
                         <tr class="<?php echo $is_hidden ? 'calendari-record-hidden' : ''; ?>">
                             <td><?php echo esc_html($record['aa_id']); ?></td>
                             <td><?php echo esc_html($record['tipo_corso']); ?></td>
-                            <td class="calendari-course-codes-cell"><?php $course_ids = preg_split('/[\s,;]+/u', (string) ($record['cds_ids'] ?? ''), -1, PREG_SPLIT_NO_EMPTY); echo implode('<br>', array_map('esc_html', $course_ids ?: array())); ?></td>
+                            <td class="calendari-course-codes-cell">
+                                <div class="calendari-course-codes-list">
+                                    <?php $course_ids = preg_split('/[\s,;]+/u', (string) ($record['cds_ids'] ?? ''), -1, PREG_SPLIT_NO_EMPTY); ?>
+                                    <?php foreach ($course_ids ?: array() as $course_id) : ?>
+                                        <span><?php echo esc_html($course_id); ?></span>
+                                    <?php endforeach; ?>
+                                </div>
+                            </td>
                             <td><?php echo esc_html($record['gruppo'] ?? ''); ?></td>
                             <td><?php echo esc_html(Calendari_Format::month_name_with_year((string) $record['data_esami'])); ?></td>
                             <td><?php echo esc_html(Calendari_Format::format_date($record['data_esami'])); ?></td>
