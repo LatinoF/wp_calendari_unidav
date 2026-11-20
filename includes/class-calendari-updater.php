@@ -7,10 +7,64 @@ final class Calendari_Updater {
 
     private string $plugin_file;
 
+    private bool $was_active_before_upgrade = false;
+
+    private bool $was_network_active_before_upgrade = false;
+
     public function __construct(string $repository, string $plugin_file) {
         $this->repository = $repository;
         $this->plugin_file = $plugin_file;
         add_filter('pre_set_site_transient_update_plugins', array($this, 'check_for_update'));
+        add_filter('upgrader_pre_install', array($this, 'remember_activation_before_upgrade'), 9, 2);
+        add_action('upgrader_process_complete', array($this, 'restore_activation_after_upgrade'), 10, 2);
+    }
+
+    public function remember_activation_before_upgrade(mixed $response, array $hook_extra): mixed {
+        if (is_wp_error($response)) {
+            return $response;
+        }
+
+        $plugin_basename = plugin_basename($this->plugin_file);
+        $updated_plugin = (string) ($hook_extra['plugin'] ?? '');
+        if ($plugin_basename !== $updated_plugin) {
+            return $response;
+        }
+
+        $this->was_network_active_before_upgrade = is_plugin_active_for_network($plugin_basename);
+        $this->was_active_before_upgrade = $this->was_network_active_before_upgrade || is_plugin_active($plugin_basename);
+
+        return $response;
+    }
+
+    public function restore_activation_after_upgrade(mixed $upgrader, array $options): void {
+        if (!$this->was_active_before_upgrade
+            || 'update' !== ($options['action'] ?? '')
+            || 'plugin' !== ($options['type'] ?? '')
+        ) {
+            return;
+        }
+
+        $plugin_basename = plugin_basename($this->plugin_file);
+        $updated_plugins = array_filter(array(
+            (string) ($options['plugin'] ?? ''),
+            ...(array) ($options['plugins'] ?? array()),
+        ));
+        if (!in_array($plugin_basename, $updated_plugins, true)) {
+            return;
+        }
+
+        $network_wide = $this->was_network_active_before_upgrade;
+        $this->was_active_before_upgrade = false;
+        $this->was_network_active_before_upgrade = false;
+
+        if (is_plugin_active($plugin_basename) || is_plugin_active_for_network($plugin_basename)) {
+            return;
+        }
+
+        if (!function_exists('activate_plugin')) {
+            require_once ABSPATH . 'wp-admin/includes/plugin.php';
+        }
+        activate_plugin($plugin_basename, '', $network_wide);
     }
 
     public function check_for_update(mixed $transient): mixed {

@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.0.5 - 2026-11-20
+
+### Description
+Preserve Calendari's active state after WordPress completes a plugin update.
+
+### Type
+Patch
+
+### Notes
+- Record whether this plugin was active before its update begins.
+- Restore activation after a successful update only when it was active beforehand.
+- Preserve network activation state on multisite installations.
+
 ## v4.0.4 - 2026-11-20
 
 ### Description
