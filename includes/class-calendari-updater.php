@@ -80,6 +80,16 @@ final class Calendari_Updater {
         if (!isset($transient->no_update) || !is_array($transient->no_update)) {
             $transient->no_update = array();
         }
+        if (!isset($transient->response) || !is_array($transient->response)) {
+            $transient->response = array();
+        }
+        $existing_response = $transient->response[$plugin_basename] ?? null;
+        $existing_version = is_object($existing_response)
+            ? (string) ($existing_response->new_version ?? '')
+            : (is_array($existing_response) ? (string) ($existing_response['new_version'] ?? '') : '');
+        if ('' === $existing_version || !version_compare($existing_version, CALENDARI_VERSION, '>')) {
+            unset($transient->response[$plugin_basename]);
+        }
         $transient->no_update[$plugin_basename] = $this->build_update_data($plugin_basename, CALENDARI_VERSION, '');
 
         $force_check = isset($_GET['force-check']);
@@ -111,6 +121,7 @@ final class Calendari_Updater {
 
         $version = ltrim(sanitize_text_field((string) ($release['tag_name'] ?? '')), 'vV');
         if ('' === $version || !version_compare($version, CALENDARI_VERSION, '>')) {
+            unset($transient->response[$plugin_basename]);
             return $transient;
         }
 
@@ -123,13 +134,11 @@ final class Calendari_Updater {
             }
         }
         if ('' === $package) {
+            unset($transient->response[$plugin_basename]);
             return $transient;
         }
 
         unset($transient->no_update[$plugin_basename]);
-        if (!isset($transient->response) || !is_array($transient->response)) {
-            $transient->response = array();
-        }
         $transient->response[$plugin_basename] = $this->build_update_data($plugin_basename, $version, $package);
 
         return $transient;

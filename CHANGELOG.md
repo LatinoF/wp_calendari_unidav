@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.0.11 - 2026-11-20
+
+### Description
+Remove stale update offers after WordPress installs the current plugin version.
+
+### Type
+Patch
+
+### Notes
+- Clear an older cached plugin update response once it is no newer than the installed version.
+- Keep the current release listed as supported when no update is available.
+
 ## v4.0.10 - 2026-11-20
 
 ### Description
