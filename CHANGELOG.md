@@ -1,5 +1,19 @@
 # Changelog
 
+## v4.0.7 - 2026-11-20
+
+### Description
+Align admin table controls, row spacing, and shortcode builder fields.
+
+### Type
+Patch
+
+### Notes
+- Align the Actions heading with the left edge of its action buttons.
+- Give CDS_IDS more table width and compact its line height so normal rows match the degree-session table.
+- Fill the shortcode builder row with six equal fields, then reflow based on container width.
+
+
 ## v4.0.6 - 2026-11-20
 
 ### Description

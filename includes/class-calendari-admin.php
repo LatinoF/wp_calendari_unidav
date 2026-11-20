@@ -1049,7 +1049,7 @@ final class Calendari_Admin {
         $venues = preg_split('/(?:\r\n|\r|\n)|\s*[;,]\s*/u', trim($venue), -1, PREG_SPLIT_NO_EMPTY);
         $venues = array_unique(array_map('trim', $venues ?: array()));
 
-        return implode('<br>', array_map('esc_html', $venues));
+        return implode(', ', array_map('esc_html', $venues));
     }
 
     private function redirect_with_notice(array $notice, array $args = array()): void {

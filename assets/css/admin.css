@@ -207,11 +207,34 @@
 }
 
 .calendari-shortcode-builder-form {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 12rem), 1fr));
+    grid-template-columns: repeat(6, minmax(0, 1fr));
 }
 
 .calendari-shortcode-builder-form > label {
     min-width: 0;
+}
+
+.calendari-builder-card {
+    container-name: calendari-builder;
+    container-type: inline-size;
+}
+
+@container calendari-builder (max-width: 62rem) {
+    .calendari-shortcode-builder-form {
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+}
+
+@container calendari-builder (max-width: 40rem) {
+    .calendari-shortcode-builder-form {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@container calendari-builder (max-width: 30rem) {
+    .calendari-shortcode-builder-form {
+        grid-template-columns: minmax(0, 1fr);
+    }
 }
 
 .calendari-group-form > h3 {
@@ -656,13 +679,13 @@
 }
 
 .calendari-admin-table .calendari-course-codes-column {
-    width: 20%;
+    width: 24%;
 }
 
 .calendari-admin-table .calendari-actions-column {
     max-width: 14%;
     white-space: nowrap;
-    width: 12%;
+    width: 10%;
 }
 
 .calendari-admin-table th {
@@ -676,9 +699,10 @@
     text-transform: uppercase;
 }
 
-.calendari-admin-table th.calendari-actions-column,
-.calendari-admin-table td.calendari-actions-column {
-    text-align: center;
+.calendari-admin-table th.calendari-actions-column {
+    padding-left: .15rem;
+    padding-right: .15rem;
+    text-align: left;
 }
 
 .calendari-admin-table thead tr {
@@ -700,11 +724,11 @@
 
 .calendari-course-codes-list {
     align-items: center;
-    column-gap: .65em;
+    column-gap: .35em;
     display: flex;
     flex-wrap: wrap;
-    row-gap: .15em;
-    line-height: 1.3;
+    row-gap: 0;
+    line-height: 1.2;
 }
 
 .calendari-course-codes-list span {
@@ -718,6 +742,7 @@
 .calendari-admin-table td.calendari-actions-column {
     padding-left: .15rem;
     padding-right: .15rem;
+    text-align: left;
 }
 
 .calendari-admin-table tbody tr.calendari-record-hidden td {
@@ -896,7 +921,7 @@
     display: flex;
     flex-wrap: nowrap;
     gap: .2rem;
-    justify-content: center;
+    justify-content: flex-start;
 }
 
 .calendari-admin .calendari-icon-button {
