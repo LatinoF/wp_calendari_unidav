@@ -331,7 +331,7 @@ final class Calendari_DB {
     }
 
     public function distinct_months(): array {
-        return array_values(array_map('intval', $this->wpdb->get_col("SELECT DISTINCT MONTH(data_esami) FROM {$this->table} WHERE data_esami <> '0000-00-00' ORDER BY MONTH(data_esami) ASC") ?: array()));
+        return array_values(array_filter(array_map('strval', $this->wpdb->get_col("SELECT DISTINCT SUBSTRING(data_esami, 1, 7) FROM {$this->table} WHERE data_esami <> '0000-00-00' ORDER BY SUBSTRING(data_esami, 1, 7) ASC") ?: array())));
     }
 
     public function find_calendar(string $aa_id, string $tipo_corso, string $tipo_prova = '', string $gruppo = ''): array {
@@ -393,9 +393,13 @@ final class Calendari_DB {
             $where[] = 'tipo_prova = %s';
             $params[] = (string) $filters['tipo_prova'];
         }
-        if (isset($filters['mese']) && (int) $filters['mese'] > 0) {
-            $where[] = 'MONTH(data_esami) = %d';
-            $params[] = (int) $filters['mese'];
+        if (isset($filters['mese']) && '' !== (string) $filters['mese']) {
+            $range = Calendari_Format::month_year_date_range((string) $filters['mese']);
+            if ($range) {
+                $where[] = 'data_esami >= %s AND data_esami < %s';
+                $params[] = $range[0];
+                $params[] = $range[1];
+            }
         }
         return array(implode(' AND ', $where), $params);
     }

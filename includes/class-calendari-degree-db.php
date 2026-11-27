@@ -148,9 +148,9 @@ final class Calendari_Degree_DB {
     }
 
     public function distinct_months(): array {
-        $values = $this->wpdb->get_col("SELECT DISTINCT mese FROM {$this->table} WHERE mese BETWEEN 1 AND 12 ORDER BY mese ASC");
+        $values = $this->wpdb->get_col("SELECT DISTINCT SUBSTRING(data, 1, 7) FROM {$this->table} WHERE data <> '0000-00-00' ORDER BY SUBSTRING(data, 1, 7) ASC");
 
-        return array_values(array_map('intval', $values ?: array()));
+        return array_values(array_filter(array_map('strval', $values ?: array())));
     }
 
     public function distinct_dates(): array {
@@ -203,9 +203,13 @@ final class Calendari_Degree_DB {
             }
         }
 
-        if (isset($filters['mese']) && (int) $filters['mese'] > 0) {
-            $where[] = 'mese = %d';
-            $params[] = (int) $filters['mese'];
+        if (isset($filters['mese']) && '' !== (string) $filters['mese']) {
+            $range = Calendari_Format::month_year_date_range((string) $filters['mese']);
+            if ($range) {
+                $where[] = 'data >= %s AND data < %s';
+                $params[] = $range[0];
+                $params[] = $range[1];
+            }
         }
 
         return array(implode(' AND ', $where), $params);

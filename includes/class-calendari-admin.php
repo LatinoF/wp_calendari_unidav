@@ -120,7 +120,7 @@ final class Calendari_Admin {
         if ('database_laurea' === $tab) {
             $filters = array(
                 'aa_id' => Calendari_Format::normalize_academic_year_id($this->ajax_filter_value('aa_id')),
-                'mese' => absint($this->ajax_filter_value('mese')),
+                'mese' => Calendari_Format::normalize_month_year($this->ajax_filter_value('mese')),
                 'data' => $this->ajax_filter_value('data'),
                 'sede' => $this->ajax_filter_value('sede'),
             );
@@ -130,7 +130,7 @@ final class Calendari_Admin {
             }
             $month_values = $this->degree_db->distinct_months();
             if ($filters['mese'] && !in_array($filters['mese'], $month_values, true)) {
-                $filters['mese'] = 0;
+                $filters['mese'] = '';
             }
             $date_values = $this->degree_db->distinct_dates();
             if ('' !== $filters['data'] && !in_array($filters['data'], $date_values, true)) {
@@ -161,7 +161,7 @@ final class Calendari_Admin {
                 'tipo_corso' => Calendari_Format::normalize_course_type($this->ajax_filter_value('tipo_corso')),
                 'gruppo' => $this->ajax_filter_value('gruppo'),
                 'tipo_prova' => $this->ajax_filter_value('tipo_prova'),
-                'mese' => absint($this->ajax_filter_value('mese')),
+                'mese' => Calendari_Format::normalize_month_year($this->ajax_filter_value('mese')),
             );
             $aa_values = $this->db->distinct_aa_ids();
             if ('' !== $filters['aa_id'] && !in_array($filters['aa_id'], $aa_values, true)) {
@@ -184,7 +184,7 @@ final class Calendari_Admin {
             }
             $month_values = $this->db->distinct_months();
             if ($filters['mese'] && !in_array($filters['mese'], $month_values, true)) {
-                $filters['mese'] = 0;
+                $filters['mese'] = '';
             }
 
             $total = $this->db->count($filters);
@@ -606,7 +606,7 @@ final class Calendari_Admin {
     private function render_degree_sessions(?array $notice = null): void {
         $filters = array(
             'aa_id' => Calendari_Format::normalize_academic_year_id(sanitize_text_field($_GET['aa_id'] ?? '')) ,
-            'mese' => absint($_GET['mese'] ?? 0),
+            'mese' => Calendari_Format::normalize_month_year(sanitize_text_field($_GET['mese'] ?? '')),
             'data' => sanitize_text_field($_GET['data'] ?? ''),
             'sede' => sanitize_text_field($_GET['sede'] ?? ''),
         );
@@ -616,8 +616,8 @@ final class Calendari_Admin {
         }
 
         $month_values = $this->degree_db->distinct_months();
-        if ($filters['mese'] && !in_array($filters['mese'], $month_values, true)) {
-            $filters['mese'] = 0;
+        if ('' !== $filters['mese'] && !in_array($filters['mese'], $month_values, true)) {
+            $filters['mese'] = '';
         }
 
         $date_values = $this->degree_db->distinct_dates();
@@ -629,13 +629,13 @@ final class Calendari_Admin {
         if ('' !== $filters['sede'] && !in_array($filters['sede'], $venue_values, true)) {
             $filters['sede'] = '';
         }
-        $has_filters = '' !== $filters['aa_id'] || $filters['mese'] > 0 || '' !== $filters['data'] || '' !== $filters['sede'];
+        $has_filters = '' !== $filters['aa_id'] || '' !== $filters['mese'] || '' !== $filters['data'] || '' !== $filters['sede'];
 
         $aa_options = array_map(static function (string $value): array {
             return array('value' => $value, 'label' => Calendari_Format::academic_year_label($value));
         }, $aa_values);
-        $month_options = array_map(static function (int $value): array {
-            return array('value' => (string) $value, 'label' => Calendari_Format::month_name($value, true));
+        $month_options = array_map(static function (string $value): array {
+            return array('value' => $value, 'label' => Calendari_Format::month_year_label($value));
         }, $month_values);
         $date_options = array_map(static function (string $value): array {
             return array('value' => $value, 'label' => Calendari_Format::format_date($value));
@@ -662,8 +662,8 @@ final class Calendari_Admin {
             <form method="get" class="calendari-filters" data-ajax-filters>
                 <input type="hidden" name="page" value="calendari">
                 <input type="hidden" name="tab" value="database_laurea">
-                <?php $this->render_searchable_filter('aa_id', 'Anno accademico', '', 'Tutti gli anni', $aa_options, $filters['aa_id']); ?>
-                <?php $this->render_searchable_filter('mese', 'Mese', '0', 'Tutti i mesi', $month_options, (string) $filters['mese']); ?>
+                <?php $this->render_searchable_filter('aa_id', 'Anno accademico', '', 'Tutti gli Anni Accademici', $aa_options, $filters['aa_id']); ?>
+                <?php $this->render_searchable_filter('mese', 'Mese', '', 'Tutti i mesi', $month_options, $filters['mese']); ?>
                 <?php $this->render_searchable_filter('data', 'Data', '', 'Tutte le date', $date_options, $filters['data']); ?>
                 <?php $this->render_searchable_filter('sede', 'Sede', '', 'Tutte le sedi', $venue_options, $filters['sede']); ?>
                 <button type="button" class="button calendari-icon-button calendari-filter-submit" data-clear-filters aria-label="<?php esc_attr_e('Cancella filtri', 'calendari'); ?>" title="<?php esc_attr_e('Cancella filtri', 'calendari'); ?>" <?php disabled(!$has_filters); ?>>
@@ -1065,7 +1065,7 @@ final class Calendari_Admin {
             'tipo_corso' => Calendari_Format::normalize_course_type(sanitize_text_field($_GET['tipo_corso'] ?? '')),
             'gruppo' => sanitize_text_field($_GET['gruppo'] ?? ''),
             'tipo_prova' => sanitize_text_field($_GET['tipo_prova'] ?? ''),
-            'mese' => absint($_GET['mese'] ?? 0),
+            'mese' => Calendari_Format::normalize_month_year(sanitize_text_field($_GET['mese'] ?? '')),
         );
         $aa_values = $this->db->distinct_aa_ids();
         if ('' !== $filters['aa_id'] && !in_array($filters['aa_id'], $aa_values, true)) {
@@ -1095,17 +1095,17 @@ final class Calendari_Admin {
         }
 
         $month_options = array();
-        foreach ($this->db->distinct_months() as $month) {
+        foreach ($this->db->distinct_months() as $month_year) {
             $month_options[] = array(
-                'value' => (string) $month,
-                'label' => Calendari_Format::month_name($month, true),
+                'value' => $month_year,
+                'label' => Calendari_Format::month_year_label($month_year),
             );
         }
-        $month_values = array_map('intval', array_column($month_options, 'value'));
-        if ($filters['mese'] && !in_array($filters['mese'], $month_values, true)) {
-            $filters['mese'] = 0;
+        $month_values = array_column($month_options, 'value');
+        if ('' !== $filters['mese'] && !in_array($filters['mese'], $month_values, true)) {
+            $filters['mese'] = '';
         }
-        $has_filters = '' !== $filters['aa_id'] || '' !== $filters['tipo_corso'] || '' !== $filters['gruppo'] || '' !== $filters['tipo_prova'] || $filters['mese'] > 0;
+        $has_filters = '' !== $filters['aa_id'] || '' !== $filters['tipo_corso'] || '' !== $filters['gruppo'] || '' !== $filters['tipo_prova'] || '' !== $filters['mese'];
 
         $aa_options = array_map(static function (string $value): array {
             return array('value' => $value, 'label' => Calendari_Format::academic_year_label($value));
@@ -1133,11 +1133,11 @@ final class Calendari_Admin {
             <form method="get" class="calendari-filters" data-ajax-filters>
                 <input type="hidden" name="page" value="calendari">
                 <input type="hidden" name="tab" value="database_esami">
-                <?php $this->render_searchable_filter('aa_id', 'Anno accademico', '', 'Tutti gli anni', $aa_options, $filters['aa_id']); ?>
+                <?php $this->render_searchable_filter('aa_id', 'Anno accademico', '', 'Tutti gli Anni Accademici', $aa_options, $filters['aa_id']); ?>
                 <?php $this->render_searchable_filter('tipo_corso', 'Tipo corso', '', 'Tutti i tipi di corso', $course_options, $filters['tipo_corso']); ?>
                 <?php $this->render_searchable_filter('gruppo', 'Gruppo', '', 'Tutti i gruppi', $group_options, $filters['gruppo']); ?>
                 <?php $this->render_searchable_filter('tipo_prova', 'Tipo prova', '', 'Tutti i tipi di prova', $exam_type_options, $filters['tipo_prova']); ?>
-                <?php $this->render_searchable_filter('mese', 'Mese', '0', 'Tutti i mesi', $month_options, (string) $filters['mese']); ?>
+                <?php $this->render_searchable_filter('mese', 'Mese', '', 'Tutti i mesi', $month_options, $filters['mese']); ?>
                 <button type="button" class="button calendari-icon-button calendari-filter-submit" data-clear-filters aria-label="<?php esc_attr_e('Cancella filtri', 'calendari'); ?>" title="<?php esc_attr_e('Cancella filtri', 'calendari'); ?>" <?php disabled(!$has_filters); ?>>
                     <i class="ti ti-filter-x" aria-hidden="true"></i>
                 </button>
@@ -1304,7 +1304,7 @@ final class Calendari_Admin {
                 } elseif ('tipo_corso' === $filter_name) {
                     $value = Calendari_Format::normalize_course_type($value);
                 } elseif ('mese' === $filter_name) {
-                    $value = (string) absint($value);
+                    $value = Calendari_Format::normalize_month_year($value);
                 }
                 if ('' !== $value && '0' !== $value) {
                     $args[$filter_name] = $value;

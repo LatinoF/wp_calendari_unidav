@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.8.0 - 2026-11-27
+
+### Description
+Show month and year together in both database month filters.
+
+### Type
+Minor
+
+### Notes
+- Change month filter options to chronological month-year values, such as “Novembre 2026”.
+- Filter exam and degree-session records by the selected month and year.
+- Rename the academic-year filter prompt to “Tutti gli Anni Accademici”.
+
 ## v4.7.3 - 2026-11-27
 
 ### Description

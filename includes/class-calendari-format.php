@@ -189,4 +189,35 @@ final class Calendari_Format {
 
         return $standalone ? ucfirst($name) : $name;
     }
+
+    public static function normalize_month_year(string $value): string {
+        $value = trim(sanitize_text_field($value));
+
+        return preg_match('/^[1-9]\d{3}-(0[1-9]|1[0-2])$/', $value) ? $value : '';
+    }
+
+    public static function month_year_label(string $value): string {
+        $month_year = self::normalize_month_year($value);
+        if ('' === $month_year) {
+            return '';
+        }
+
+        [$year, $month] = explode('-', $month_year);
+
+        return self::month_name((int) $month, true) . ' ' . $year;
+    }
+
+    public static function month_year_date_range(string $value): ?array {
+        $month_year = self::normalize_month_year($value);
+        if ('' === $month_year) {
+            return null;
+        }
+
+        $start = DateTimeImmutable::createFromFormat('!Y-m-d', $month_year . '-01', new DateTimeZone('UTC'));
+        if (!$start) {
+            return null;
+        }
+
+        return array($start->format('Y-m-d'), $start->modify('+1 month')->format('Y-m-d'));
+    }
 }
