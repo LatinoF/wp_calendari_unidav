@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.6.3 - 2026-11-27
+
+### Description
+Polish date-picker hover states and pointer affordances.
+
+### Type
+Patch
+
+### Notes
+- Show pointer cursors for calendar navigation, day cells, and footer actions.
+- Round Rimuovi and Annulla hover backgrounds to match other plugin controls.
+
 ## v4.6.2 - 2026-11-27
 
 ### Description
