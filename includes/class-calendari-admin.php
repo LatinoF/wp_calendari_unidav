@@ -416,7 +416,7 @@ final class Calendari_Admin {
                     <i class="ti ti-calendar" aria-hidden="true"></i>
                 </button>
             </div>
-            <div class="calendari-date-picker-popover" data-date-popover role="dialog" aria-label="Choose date" hidden>
+            <div class="calendari-date-picker-popover" data-date-popover popover="manual" role="dialog" aria-label="Choose date" hidden>
                 <div class="calendari-date-picker-header">
                     <button type="button" class="calendari-date-picker-nav" data-date-prev aria-label="Previous month"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
                     <strong data-date-month-year></strong>

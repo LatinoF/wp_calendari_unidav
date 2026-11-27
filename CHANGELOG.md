@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.6.1 - 2026-11-27
+
+### Description
+Keep the custom date picker above the modal without affecting its layout.
+
+### Type
+Patch
+
+### Notes
+- Render the calendar in the browser top layer so it is not clipped by or reflows the modal.
+
 ## v4.6.0 - 2026-11-27
 
 ### Description

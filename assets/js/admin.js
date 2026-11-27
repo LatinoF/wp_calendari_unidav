@@ -404,6 +404,9 @@
             }
 
             function closePicker(returnFocus) {
+                if (typeof popover.hidePopover === 'function' && popover.matches(':popover-open')) {
+                    popover.hidePopover();
+                }
                 popover.hidden = true;
                 display.setAttribute('aria-expanded', 'false');
                 toggle.setAttribute('aria-expanded', 'false');
@@ -425,7 +428,7 @@
             function focusDate(date) {
                 var button = days.querySelector('[data-date-value="' + isoDate(date) + '"]');
                 if (button) {
-                    button.focus();
+                    button.focus({ preventScroll: true });
                 }
             }
 
@@ -510,6 +513,9 @@
                     ? new Date(selected.getFullYear(), selected.getMonth(), 1)
                     : new Date(today.getFullYear(), today.getMonth(), 1);
                 popover.hidden = false;
+                if (typeof popover.showPopover === 'function' && !popover.matches(':popover-open')) {
+                    popover.showPopover();
+                }
                 display.setAttribute('aria-expanded', 'true');
                 toggle.setAttribute('aria-expanded', 'true');
                 renderCalendar();

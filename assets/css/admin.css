@@ -1140,7 +1140,9 @@
     border-radius: 14px;
     box-shadow: 0 18px 48px rgb(9 30 44 / 22%);
     color: var(--calendari-admin-ink);
+    inset: auto;
     max-height: calc(100vh - 1rem);
+    margin: 0;
     overflow: auto;
     padding: .85rem;
     position: fixed;
