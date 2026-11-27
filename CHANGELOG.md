@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.7.3 - 2026-11-27
+
+### Description
+Clarify academic-year and session-date labels in the admin modals.
+
+### Type
+Patch
+
+### Notes
+- Label the academic-year field “ANNO ACCADEMICO (ID)” in both modals.
+- Shorten the degree-session date field label to “DATA”.
+
 ## v4.7.2 - 2026-11-27
 
 ### Description

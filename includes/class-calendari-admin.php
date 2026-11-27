@@ -694,10 +694,10 @@ final class Calendari_Admin {
                     </header>
                     <div class="calendari-degree-modal-fields">
                         <label for="calendari-degree-modal-aa-id">
-                            <span><?php esc_html_e('ANNO ACCADEMICO', 'calendari'); ?></span>
+                            <span><?php esc_html_e('ANNO ACCADEMICO (ID)', 'calendari'); ?></span>
                             <input type="text" id="calendari-degree-modal-aa-id" name="aa_id" placeholder="2026" required>
                         </label>
-                        <?php $this->render_date_picker_field('calendari-degree-modal-date', 'data', __('DATA DELLA SESSIONE', 'calendari'), true); ?>
+                        <?php $this->render_date_picker_field('calendari-degree-modal-date', 'data', __('DATA', 'calendari'), true); ?>
                         <label for="calendari-degree-modal-venue">
                             <span>SEDE</span>
                             <input type="text" id="calendari-degree-modal-venue" name="sede" required>
@@ -1165,7 +1165,7 @@ final class Calendari_Admin {
                         </div>
                     </header>
                     <div class="calendari-degree-modal-fields calendari-exam-modal-fields">
-                        <label for="calendari-exam-modal-aa-id"><span><?php esc_html_e('ANNO ACCADEMICO', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" placeholder="2026" required></label>
+                        <label for="calendari-exam-modal-aa-id"><span><?php esc_html_e('ANNO ACCADEMICO (ID)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" placeholder="2026" required></label>
                         <label for="calendari-exam-modal-course"><span><?php esc_html_e('TIPO DI CORSO', 'calendari'); ?></span><select id="calendari-exam-modal-course" name="tipo_corso" required>
                             <option value=""><?php esc_html_e('SELEZIONA UN TIPO DI CORSO', 'calendari'); ?></option>
                             <?php foreach (Calendari_Format::course_type_labels() as $course_code => $course_label) : ?>
