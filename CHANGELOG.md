@@ -1,5 +1,16 @@
 # Changelog
 
+## v4.7.1 - 2026-11-27
+
+### Description
+Increase the calendar icon size in the custom date-picker trigger.
+
+### Type
+Patch
+
+### Notes
+- Keep the existing 40px hit area and center the larger Tabler icon.
+
 ## v4.7.0 - 2026-11-27
 
 ### Description
