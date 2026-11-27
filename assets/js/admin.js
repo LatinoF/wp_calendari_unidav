@@ -54,6 +54,20 @@
     });
 
     var filterRequestId = 0;
+    var infiniteScrollObserver = 'IntersectionObserver' in window
+        ? new IntersectionObserver(function (entries) {
+            entries.forEach(function (entry) {
+                if (!entry.isIntersecting) {
+                    return;
+                }
+                var results = entry.target.closest('[data-filter-results]');
+                var form = entry.target.calendariFilterForm;
+                if (results && form) {
+                    loadNextFilterPage(form, results);
+                }
+            });
+        }, { rootMargin: '320px 0px' })
+        : null;
 
     function updateClearFilterButton(form) {
         var button = form.querySelector('[data-clear-filters]');
@@ -67,7 +81,7 @@
         button.disabled = !hasActiveFilters;
     }
 
-    function updateFilterAddress(form, page) {
+    function updateFilterAddress(form) {
         if (!window.history || !window.URL) {
             return;
         }
@@ -85,19 +99,77 @@
                 url.searchParams.set(input.name, input.value);
             }
         });
-        if (page > 1) {
-            url.searchParams.set('paged', String(page));
-        } else {
-            url.searchParams.delete('paged');
-        }
+        url.searchParams.delete('paged');
         window.history.replaceState(null, '', url.href);
     }
 
-    function submitAjaxFilters(form, page) {
+    function observeFilterSentinel(form, results) {
+        var sentinel = results.querySelector('[data-infinite-scroll-sentinel]');
+        if (!sentinel) {
+            return;
+        }
+        sentinel.calendariFilterForm = form;
+        if (!infiniteScrollObserver) {
+            return;
+        }
+        infiniteScrollObserver.unobserve(sentinel);
+        if ('1' === results.getAttribute('data-has-more')) {
+            infiniteScrollObserver.observe(sentinel);
+        } else {
+            infiniteScrollObserver.unobserve(sentinel);
+        }
+    }
+
+    function loadNextFilterPage(form, results) {
+        if ('1' !== results.getAttribute('data-has-more') || '1' === results.getAttribute('data-loading')) {
+            return;
+        }
+        var nextPage = Math.max(2, parseInt(results.getAttribute('data-next-page'), 10) || 2);
+        submitAjaxFilters(form, nextPage, true);
+    }
+
+    function checkFallbackInfiniteScroll() {
+        if (infiniteScrollObserver) {
+            return;
+        }
+        document.querySelectorAll('form[data-ajax-filters]').forEach(function (form) {
+            var card = form.closest('.calendari-card');
+            var results = card ? card.querySelector('[data-filter-results]') : null;
+            var sentinel = results ? results.querySelector('[data-infinite-scroll-sentinel]') : null;
+            if (!sentinel || !sentinel.getClientRects().length) {
+                return;
+            }
+            if (sentinel.getBoundingClientRect().top < window.innerHeight + 320) {
+                loadNextFilterPage(form, results);
+            }
+        });
+    }
+
+    function appendFilterPage(items, html) {
+        var pageContainer = document.createElement('div');
+        pageContainer.innerHTML = html || '';
+        var currentBody = items.querySelector('.calendari-admin-table tbody');
+        var pageRows = pageContainer.querySelectorAll('.calendari-admin-table tbody tr');
+
+        if (currentBody && pageRows.length) {
+            Array.prototype.forEach.call(pageRows, function (row) {
+                currentBody.appendChild(row);
+            });
+            return;
+        }
+
+        items.insertAdjacentHTML('beforeend', html || '');
+    }
+
+    function submitAjaxFilters(form, page, append) {
         var settings = window.CalendariAdmin || {};
         var card = form.closest('.calendari-card');
         var results = card ? card.querySelector('[data-filter-results]') : null;
         if (!results || !settings.ajaxUrl || !settings.filterNonce) {
+            return;
+        }
+        append = true === append;
+        if (append && '1' === results.getAttribute('data-loading')) {
             return;
         }
 
@@ -113,9 +185,14 @@
         });
 
         results.setAttribute('aria-busy', 'true');
+        results.setAttribute('data-loading', '1');
         var status = form.querySelector('[data-filter-status]');
         if (status) {
             status.textContent = '';
+        }
+        var loadingStatus = results.querySelector('[data-infinite-scroll-status]');
+        if (loadingStatus) {
+            loadingStatus.textContent = append ? 'Loading more records…' : '';
         }
         updateClearFilterButton(form);
 
@@ -135,22 +212,42 @@
             if (form.getAttribute('data-filter-request-id') !== String(requestId)) {
                 return;
             }
-            results.innerHTML = data.html || '';
+            var items = results.querySelector('[data-filter-items]') || results;
+            if (append) {
+                appendFilterPage(items, data.html || '');
+            } else {
+                items.innerHTML = data.html || '';
+            }
+            results.setAttribute('data-next-page', String(data.next_page || ((page || 1) + 1)));
+            results.setAttribute('data-has-more', data.has_more ? '1' : '0');
             var count = card.querySelector('[data-filter-count]');
             if (count && data.count_label) {
                 count.textContent = data.count_label;
             }
-            updateFilterAddress(form, page || 1);
+            if (loadingStatus) {
+                loadingStatus.textContent = '';
+            }
+            observeFilterSentinel(form, results);
+            updateFilterAddress(form);
         }).catch(function (error) {
             if (form.getAttribute('data-filter-request-id') === String(requestId) && status) {
                 status.textContent = settings.filterError || error.message;
+            }
+            if (form.getAttribute('data-filter-request-id') === String(requestId) && append && loadingStatus) {
+                loadingStatus.textContent = settings.filterError || error.message;
+                results.setAttribute('data-has-more', '0');
+                observeFilterSentinel(form, results);
             }
         }).finally(function () {
             if (form.getAttribute('data-filter-request-id') !== String(requestId)) {
                 return;
             }
             results.removeAttribute('aria-busy');
+            results.removeAttribute('data-loading');
             updateClearFilterButton(form);
+            if (!infiniteScrollObserver) {
+                window.requestAnimationFrame(checkFallbackInfiniteScroll);
+            }
         });
     }
 
@@ -341,20 +438,26 @@
         var card = form.closest('.calendari-card');
         var results = card ? card.querySelector('[data-filter-results]') : null;
         if (results) {
-            results.addEventListener('click', function (event) {
-                var link = event.target.closest('a[href]');
-                if (!link || !results.contains(link)) {
-                    return;
-                }
-                var targetUrl = new URL(link.href, window.location.href);
-                if (!targetUrl.searchParams.has('paged')) {
-                    return;
-                }
-                event.preventDefault();
-                submitAjaxFilters(form, Math.max(1, parseInt(targetUrl.searchParams.get('paged'), 10) || 1));
-            });
+            observeFilterSentinel(form, results);
         }
     });
+
+    if (!infiniteScrollObserver) {
+        var scrollCheckPending = false;
+        function scheduleFallbackScrollCheck() {
+            if (scrollCheckPending) {
+                return;
+            }
+            scrollCheckPending = true;
+            window.requestAnimationFrame(function () {
+                scrollCheckPending = false;
+                checkFallbackInfiniteScroll();
+            });
+        }
+        window.addEventListener('scroll', scheduleFallbackScrollCheck, { passive: true });
+        window.addEventListener('resize', scheduleFallbackScrollCheck);
+        scheduleFallbackScrollCheck();
+    }
 
     var shortcodeBuilder = document.getElementById('calendari-shortcode-builder-form');
     if (shortcodeBuilder) {

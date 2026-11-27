@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.3.0 - 2026-11-27
+
+### Description
+Replace numbered pagination with scroll-based loading in both admin databases.
+
+### Type
+Minor
+
+### Notes
+- Load exam records and degree sessions in additional batches as the user scrolls.
+- Preserve filtering and append new rows without repeating table headings.
+
 ## v4.2.2 - 2026-11-20
 
 ### Description

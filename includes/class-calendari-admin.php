@@ -141,7 +141,13 @@ final class Calendari_Admin {
             ob_start();
             $this->render_degree_session_results($records, $total, $page, $filters);
             $html = (string) ob_get_clean();
-            wp_send_json_success(array('html' => $html, 'total' => $total, 'page' => $page));
+            wp_send_json_success(array(
+                'html' => $html,
+                'total' => $total,
+                'page' => $page,
+                'next_page' => $page + 1,
+                'has_more' => $page * $per_page < $total,
+            ));
         }
 
         if ('database_esami' === $tab) {
@@ -186,6 +192,8 @@ final class Calendari_Admin {
                 'total' => $total,
                 'count_label' => number_format_i18n($total) . ' ' . __('eventi', 'calendari'),
                 'page' => $page,
+                'next_page' => $page + 1,
+                'has_more' => $page * $per_page < $total,
             ));
         }
 
@@ -433,7 +441,7 @@ final class Calendari_Admin {
             return array('value' => $value, 'label' => $value);
         }, $venue_values);
 
-        $page = max(1, absint($_GET['paged'] ?? 1));
+        $page = 1;
         $per_page = 25;
         $total = $this->degree_db->count($filters);
         $records = $this->degree_db->list($filters, $per_page, ($page - 1) * $per_page);
@@ -461,8 +469,10 @@ final class Calendari_Admin {
             <?php if ($notice) : ?>
                 <?php $this->render_notice($notice); ?>
             <?php endif; ?>
-            <div class="calendari-filter-results" data-filter-results aria-live="polite">
-                <?php $this->render_degree_session_results($records, $total, $page, $filters); ?>
+            <div class="calendari-filter-results" data-filter-results data-next-page="<?php echo esc_attr((string) ($page + 1)); ?>" data-has-more="<?php echo $page * $per_page < $total ? '1' : '0'; ?>" aria-live="polite">
+                <div data-filter-items><?php $this->render_degree_session_results($records, $total, $page, $filters); ?></div>
+                <div class="calendari-infinite-scroll-status" data-infinite-scroll-status role="status" aria-live="polite"></div>
+                <div class="calendari-infinite-scroll-sentinel" data-infinite-scroll-sentinel aria-hidden="true"></div>
             </div>
             <dialog class="calendari-degree-modal" id="calendari-degree-session-modal" aria-labelledby="calendari-degree-modal-title">
                 <form method="post" class="calendari-degree-modal-form">
@@ -538,13 +548,6 @@ final class Calendari_Admin {
             </table>
         </div>
         <?php
-        echo wp_kses_post(paginate_links(array(
-            'base' => add_query_arg(array('page' => 'calendari', 'tab' => 'database_laurea', 'paged' => '%#%'), admin_url('admin.php')),
-            'format' => '',
-            'current' => $page,
-            'total' => max(1, (int) ceil($total / 25)),
-            'add_args' => array_filter($filters),
-        )));
     }
 
     private function render_graphics_settings(?array $notice = null): void {
@@ -899,7 +902,7 @@ final class Calendari_Admin {
             $group_options[] = array('value' => $group_value, 'label' => $group_value);
         }
 
-        $page = max(1, absint($_GET['paged'] ?? 1));
+        $page = 1;
         $per_page = 25;
         $total = $this->db->count($filters);
         $records = $this->db->list($filters, $per_page, ($page - 1) * $per_page);
@@ -928,8 +931,10 @@ final class Calendari_Admin {
             <?php if ($notice) : ?>
                 <?php $this->render_notice($notice); ?>
             <?php endif; ?>
-            <div class="calendari-filter-results" data-filter-results aria-live="polite">
-                <?php $this->render_exam_repository_results($records, $total, $page, $filters); ?>
+            <div class="calendari-filter-results" data-filter-results data-next-page="<?php echo esc_attr((string) ($page + 1)); ?>" data-has-more="<?php echo $page * $per_page < $total ? '1' : '0'; ?>" aria-live="polite">
+                <div data-filter-items><?php $this->render_exam_repository_results($records, $total, $page, $filters); ?></div>
+                <div class="calendari-infinite-scroll-status" data-infinite-scroll-status role="status" aria-live="polite"></div>
+                <div class="calendari-infinite-scroll-sentinel" data-infinite-scroll-sentinel aria-hidden="true"></div>
             </div>
             <dialog class="calendari-degree-modal calendari-exam-modal" id="calendari-exam-modal" aria-labelledby="calendari-exam-modal-title">
                 <form method="post" class="calendari-degree-modal-form">
@@ -1029,13 +1034,6 @@ final class Calendari_Admin {
             </table>
         </div>
         <?php
-        echo wp_kses_post(paginate_links(array(
-            'base' => add_query_arg(array('page' => 'calendari', 'tab' => 'database_esami', 'paged' => '%#%'), admin_url('admin.php')),
-            'format' => '',
-            'current' => $page,
-            'total' => max(1, (int) ceil($total / 25)),
-            'add_args' => array_filter($filters),
-        )));
     }
 
     private function render_notice(array $notice): void {

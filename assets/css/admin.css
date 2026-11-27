@@ -666,6 +666,20 @@
     width: 100%;
 }
 
+.calendari-infinite-scroll-status {
+    color: var(--calendari-admin-muted);
+    padding: .9rem;
+    text-align: center;
+}
+
+.calendari-infinite-scroll-status:empty {
+    display: none;
+}
+
+.calendari-infinite-scroll-sentinel {
+    height: 1px;
+}
+
 .calendari-admin-table {
     background: var(--calendari-admin-card);
     border: 1px solid var(--calendari-admin-line);
