@@ -113,19 +113,49 @@
             return;
         }
         infiniteScrollObserver.unobserve(sentinel);
-        if ('1' === results.getAttribute('data-has-more')) {
+        if ('1' === results.getAttribute('data-has-more') && '1' !== results.getAttribute('data-restoring')) {
             infiniteScrollObserver.observe(sentinel);
-        } else {
-            infiniteScrollObserver.unobserve(sentinel);
         }
     }
 
     function loadNextFilterPage(form, results) {
-        if ('1' !== results.getAttribute('data-has-more') || '1' === results.getAttribute('data-loading')) {
+        if ('1' !== results.getAttribute('data-has-more')
+            || '1' === results.getAttribute('data-loading')
+            || '1' === results.getAttribute('data-restoring')
+        ) {
             return;
         }
         var nextPage = Math.max(2, parseInt(results.getAttribute('data-next-page'), 10) || 2);
         submitAjaxFilters(form, nextPage, true);
+    }
+
+    function finishFilterRestore(form, results) {
+        var scrollPosition = Math.max(0, parseInt(results.getAttribute('data-restore-scroll'), 10) || 0);
+        results.removeAttribute('data-restoring');
+        results.removeAttribute('data-restore-pages');
+        results.removeAttribute('data-restore-scroll');
+        updateFilterAddress(form);
+        window.requestAnimationFrame(function () {
+            window.scrollTo(0, scrollPosition);
+            observeFilterSentinel(form, results);
+        });
+    }
+
+    function beginFilterRestore(form, results) {
+        var targetPages = Math.max(1, parseInt(results.getAttribute('data-restore-pages'), 10) || 1);
+        var scrollPosition = Math.max(0, parseInt(results.getAttribute('data-restore-scroll'), 10) || 0);
+        if (targetPages <= 1 && scrollPosition <= 0) {
+            observeFilterSentinel(form, results);
+            return;
+        }
+
+        results.setAttribute('data-restoring', '1');
+        if (targetPages <= 1 || '1' !== results.getAttribute('data-has-more')) {
+            finishFilterRestore(form, results);
+            return;
+        }
+
+        submitAjaxFilters(form, 2, true);
     }
 
     function checkFallbackInfiniteScroll() {
@@ -228,7 +258,9 @@
                 loadingStatus.textContent = '';
             }
             observeFilterSentinel(form, results);
-            updateFilterAddress(form);
+            if ('1' !== results.getAttribute('data-restoring')) {
+                updateFilterAddress(form);
+            }
         }).catch(function (error) {
             if (form.getAttribute('data-filter-request-id') === String(requestId) && status) {
                 status.textContent = settings.filterError || error.message;
@@ -245,6 +277,16 @@
             results.removeAttribute('aria-busy');
             results.removeAttribute('data-loading');
             updateClearFilterButton(form);
+            if ('1' === results.getAttribute('data-restoring')) {
+                var targetPages = Math.max(1, parseInt(results.getAttribute('data-restore-pages'), 10) || 1);
+                var loadedPages = Math.max(1, (parseInt(results.getAttribute('data-next-page'), 10) || 2) - 1);
+                if ('1' === results.getAttribute('data-has-more') && loadedPages < targetPages) {
+                    submitAjaxFilters(form, loadedPages + 1, true);
+                    return;
+                }
+                finishFilterRestore(form, results);
+                return;
+            }
             if (!infiniteScrollObserver) {
                 window.requestAnimationFrame(checkFallbackInfiniteScroll);
             }
@@ -438,8 +480,34 @@
         var card = form.closest('.calendari-card');
         var results = card ? card.querySelector('[data-filter-results]') : null;
         if (results) {
-            observeFilterSentinel(form, results);
+            beginFilterRestore(form, results);
         }
+    });
+
+    document.querySelectorAll('form[data-preserve-filter-position]').forEach(function (modalForm) {
+        modalForm.addEventListener('submit', function () {
+            var card = modalForm.closest('.calendari-card');
+            var filterForm = card ? card.querySelector('form[data-ajax-filters]') : null;
+            var results = card ? card.querySelector('[data-filter-results]') : null;
+            if (filterForm) {
+                modalForm.querySelectorAll('[data-return-filter]').forEach(function (returnField) {
+                    var filterName = returnField.getAttribute('data-return-filter');
+                    var currentFilter = filterForm.querySelector('[name="' + filterName + '"]');
+                    if (currentFilter) {
+                        returnField.value = currentFilter.value;
+                    }
+                });
+            }
+
+            var returnPages = modalForm.querySelector('[data-return-pages]');
+            if (returnPages && results) {
+                returnPages.value = String(Math.max(1, (parseInt(results.getAttribute('data-next-page'), 10) || 2) - 1));
+            }
+            var returnScroll = modalForm.querySelector('[data-return-scroll]');
+            if (returnScroll) {
+                returnScroll.value = String(Math.max(0, Math.round(window.scrollY || window.pageYOffset || 0)));
+            }
+        });
     });
 
     if (!infiniteScrollObserver) {

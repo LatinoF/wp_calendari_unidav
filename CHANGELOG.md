@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.3.1 - 2026-11-27
+
+### Description
+Keep each database view's filters, loaded rows, and scroll position after saving a modal.
+
+### Type
+Patch
+
+### Notes
+- Restore the previous filter state, loaded batch count, and scroll offset after saving an exam or degree-session record.
+- Remove the unused sample CSV.
+
 ## v4.3.0 - 2026-11-27
 
 ### Description

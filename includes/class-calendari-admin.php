@@ -445,6 +445,8 @@ final class Calendari_Admin {
         $per_page = 25;
         $total = $this->degree_db->count($filters);
         $records = $this->degree_db->list($filters, $per_page, ($page - 1) * $per_page);
+        $restore_pages = min(1000, max(1, absint($_GET['restore_pages'] ?? 1)));
+        $restore_scroll = min(10000000, absint($_GET['restore_scroll'] ?? 0));
         ?>
         <div class="calendari-card">
             <div class="calendari-section-heading calendari-repository-heading">
@@ -469,16 +471,17 @@ final class Calendari_Admin {
             <?php if ($notice) : ?>
                 <?php $this->render_notice($notice); ?>
             <?php endif; ?>
-            <div class="calendari-filter-results" data-filter-results data-next-page="<?php echo esc_attr((string) ($page + 1)); ?>" data-has-more="<?php echo $page * $per_page < $total ? '1' : '0'; ?>" aria-live="polite">
+            <div class="calendari-filter-results" data-filter-results data-next-page="<?php echo esc_attr((string) ($page + 1)); ?>" data-has-more="<?php echo $page * $per_page < $total ? '1' : '0'; ?>" data-restore-pages="<?php echo esc_attr((string) $restore_pages); ?>" data-restore-scroll="<?php echo esc_attr((string) $restore_scroll); ?>" aria-live="polite">
                 <div data-filter-items><?php $this->render_degree_session_results($records, $total, $page, $filters); ?></div>
                 <div class="calendari-infinite-scroll-status" data-infinite-scroll-status role="status" aria-live="polite"></div>
                 <div class="calendari-infinite-scroll-sentinel" data-infinite-scroll-sentinel aria-hidden="true"></div>
             </div>
             <dialog class="calendari-degree-modal" id="calendari-degree-session-modal" aria-labelledby="calendari-degree-modal-title">
-                <form method="post" class="calendari-degree-modal-form">
+                <form method="post" class="calendari-degree-modal-form" data-preserve-filter-position>
                     <?php wp_nonce_field('calendari_degree_save', 'calendari_degree_nonce'); ?>
                     <input type="hidden" id="calendari-degree-modal-id" name="id" value="0">
                     <input type="hidden" name="calendari_degree_save" value="1">
+                    <?php $this->render_modal_return_fields($filters); ?>
                     <header class="calendari-degree-modal-header">
                         <div>
                             <p class="calendari-degree-modal-eyebrow"><?php esc_html_e('Database Sessioni di Laurea', 'calendari'); ?></p>
@@ -674,6 +677,10 @@ final class Calendari_Admin {
 
     private function handle_save(): void {
         check_admin_referer('calendari_save', 'calendari_nonce');
+        $return_args = $this->get_modal_return_args(
+            'database_esami',
+            array('aa_id', 'tipo_corso', 'gruppo', 'tipo_prova', 'mese')
+        );
         $id = absint($_POST['id'] ?? 0);
         $values = array();
         foreach (Calendari_Importer::HEADERS as $header) {
@@ -682,7 +689,7 @@ final class Calendari_Admin {
 
         $validation = Calendari_Importer::validate_values($values);
         if ($validation['errors']) {
-            $this->redirect_with_notice(array('messages' => $validation['errors']), array('tab' => 'database_esami'));
+            $this->redirect_with_notice(array('messages' => $validation['errors']), $return_args);
         }
 
         $record = $validation['record'];
@@ -690,10 +697,10 @@ final class Calendari_Admin {
         $record['booking_dates_tbd'] = is_scalar($booking_dates_tbd) && '1' === (string) $booking_dates_tbd ? 1 : 0;
         $saved = $id ? $this->db->update($id, $record) : $this->db->upsert($record);
         if (false === $saved) {
-            $this->redirect_with_notice(array('messages' => array(__('Impossibile salvare il record.', 'calendari'))), array('tab' => 'database_esami'));
+            $this->redirect_with_notice(array('messages' => array(__('Impossibile salvare il record.', 'calendari'))), $return_args);
         }
 
-        $this->redirect_with_notice(array('messages' => array(__('Record calendario salvato.', 'calendari'))), array('tab' => 'database_esami'));
+        $this->redirect_with_notice(array('messages' => array(__('Record calendario salvato.', 'calendari'))), $return_args);
     }
 
     private function handle_delete(): void {
@@ -726,6 +733,10 @@ final class Calendari_Admin {
 
     private function handle_degree_save(): void {
         check_admin_referer('calendari_degree_save', 'calendari_degree_nonce');
+        $return_args = $this->get_modal_return_args(
+            'database_laurea',
+            array('aa_id', 'mese', 'data', 'sede')
+        );
         $id = absint(wp_unslash($_POST['id'] ?? 0));
         $record = array(
             'aa_id' => Calendari_Format::normalize_academic_year_id(sanitize_text_field(wp_unslash($_POST['aa_id'] ?? ''))),
@@ -750,19 +761,19 @@ final class Calendari_Admin {
         }
 
         if ($errors) {
-            $this->redirect_with_notice(array('messages' => $errors), array('tab' => 'database_laurea'));
+            $this->redirect_with_notice(array('messages' => $errors), $return_args);
         }
 
         $result = $id ? $this->degree_db->update($id, $record) : $this->degree_db->insert($record);
         if (false === $result) {
             $this->redirect_with_notice(
                 array('messages' => array(__('Impossibile salvare la sessione di laurea.', 'calendari'))),
-                array('tab' => 'database_laurea')
+                $return_args
             );
         }
 
         $message = $id ? __('Sessione di laurea aggiornata.', 'calendari') : __('Sessione di laurea inserita.', 'calendari');
-        $this->redirect_with_notice(array('messages' => array($message)), array('tab' => 'database_laurea'));
+        $this->redirect_with_notice(array('messages' => array($message)), $return_args);
     }
 
     private function handle_degree_delete(): void {
@@ -906,6 +917,8 @@ final class Calendari_Admin {
         $per_page = 25;
         $total = $this->db->count($filters);
         $records = $this->db->list($filters, $per_page, ($page - 1) * $per_page);
+        $restore_pages = min(1000, max(1, absint($_GET['restore_pages'] ?? 1)));
+        $restore_scroll = min(10000000, absint($_GET['restore_scroll'] ?? 0));
         ?>
         <div class="calendari-card">
             <div class="calendari-section-heading calendari-repository-heading">
@@ -931,16 +944,17 @@ final class Calendari_Admin {
             <?php if ($notice) : ?>
                 <?php $this->render_notice($notice); ?>
             <?php endif; ?>
-            <div class="calendari-filter-results" data-filter-results data-next-page="<?php echo esc_attr((string) ($page + 1)); ?>" data-has-more="<?php echo $page * $per_page < $total ? '1' : '0'; ?>" aria-live="polite">
+            <div class="calendari-filter-results" data-filter-results data-next-page="<?php echo esc_attr((string) ($page + 1)); ?>" data-has-more="<?php echo $page * $per_page < $total ? '1' : '0'; ?>" data-restore-pages="<?php echo esc_attr((string) $restore_pages); ?>" data-restore-scroll="<?php echo esc_attr((string) $restore_scroll); ?>" aria-live="polite">
                 <div data-filter-items><?php $this->render_exam_repository_results($records, $total, $page, $filters); ?></div>
                 <div class="calendari-infinite-scroll-status" data-infinite-scroll-status role="status" aria-live="polite"></div>
                 <div class="calendari-infinite-scroll-sentinel" data-infinite-scroll-sentinel aria-hidden="true"></div>
             </div>
             <dialog class="calendari-degree-modal calendari-exam-modal" id="calendari-exam-modal" aria-labelledby="calendari-exam-modal-title">
-                <form method="post" class="calendari-degree-modal-form">
+                <form method="post" class="calendari-degree-modal-form" data-preserve-filter-position>
                     <?php wp_nonce_field('calendari_save', 'calendari_nonce'); ?>
                     <input type="hidden" id="calendari-exam-modal-id" name="id" value="0">
                     <input type="hidden" name="calendari_save" value="1">
+                    <?php $this->render_modal_return_fields($filters); ?>
                     <header class="calendari-degree-modal-header">
                         <div>
                             <p class="calendari-degree-modal-eyebrow"><?php esc_html_e('Database Appelli d\'Esame', 'calendari'); ?></p>
@@ -1055,6 +1069,58 @@ final class Calendari_Admin {
         $venues = array_unique(array_map('trim', $venues ?: array()));
 
         return implode(', ', array_map('esc_html', $venues));
+    }
+
+    private function render_modal_return_fields(array $filters): void {
+        foreach ($filters as $name => $value) {
+            if (!is_scalar($value)) {
+                continue;
+            }
+            ?>
+            <input type="hidden" name="calendari_return_filters[<?php echo esc_attr($name); ?>]" data-return-filter="<?php echo esc_attr($name); ?>" value="<?php echo esc_attr((string) $value); ?>">
+            <?php
+        }
+        ?>
+        <input type="hidden" name="calendari_return_pages" data-return-pages value="1">
+        <input type="hidden" name="calendari_return_scroll" data-return-scroll value="0">
+        <?php
+    }
+
+    private function get_modal_return_args(string $tab, array $filter_names): array {
+        $args = array('tab' => $tab);
+        $posted_filters = wp_unslash($_POST['calendari_return_filters'] ?? array());
+        if (is_array($posted_filters)) {
+            foreach ($filter_names as $filter_name) {
+                $raw_value = $posted_filters[$filter_name] ?? '';
+                if (!is_scalar($raw_value)) {
+                    continue;
+                }
+                $value = sanitize_text_field((string) $raw_value);
+                if ('aa_id' === $filter_name) {
+                    $value = Calendari_Format::normalize_academic_year_id($value);
+                } elseif ('tipo_corso' === $filter_name) {
+                    $value = Calendari_Format::normalize_course_type($value);
+                } elseif ('mese' === $filter_name) {
+                    $value = (string) absint($value);
+                }
+                if ('' !== $value && '0' !== $value) {
+                    $args[$filter_name] = $value;
+                }
+            }
+        }
+
+        $raw_restore_pages = wp_unslash($_POST['calendari_return_pages'] ?? 1);
+        $raw_restore_scroll = wp_unslash($_POST['calendari_return_scroll'] ?? 0);
+        $restore_pages = min(1000, max(1, absint(is_scalar($raw_restore_pages) ? $raw_restore_pages : 1)));
+        $restore_scroll = min(10000000, absint(is_scalar($raw_restore_scroll) ? $raw_restore_scroll : 0));
+        if ($restore_pages > 1) {
+            $args['restore_pages'] = $restore_pages;
+        }
+        if ($restore_scroll > 0) {
+            $args['restore_scroll'] = $restore_scroll;
+        }
+
+        return $args;
     }
 
     private function redirect_with_notice(array $notice, array $args = array()): void {
