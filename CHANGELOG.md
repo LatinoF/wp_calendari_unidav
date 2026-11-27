@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.6.2 - 2026-11-27
+
+### Description
+Clarify custom date-picker actions.
+
+### Type
+Patch
+
+### Notes
+- Replace the ambiguous clear action with “Rimuovi” and a Tabler trash icon.
+- Add “Annulla” with a Tabler X icon to close the calendar without changing the selected date.
+
 ## v4.6.1 - 2026-11-27
 
 ### Description

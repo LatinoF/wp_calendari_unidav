@@ -424,11 +424,12 @@ final class Calendari_Admin {
                 </div>
                 <div class="calendari-date-picker-weekdays" data-date-weekdays role="row"></div>
                 <div class="calendari-date-picker-days" data-date-days role="grid"></div>
-                <?php if (!$required) : ?>
-                    <div class="calendari-date-picker-footer">
-                        <button type="button" class="calendari-date-picker-clear" data-date-clear><?php esc_html_e('Cancella', 'calendari'); ?></button>
-                    </div>
-                <?php endif; ?>
+                <div class="calendari-date-picker-footer">
+                    <?php if (!$required) : ?>
+                        <button type="button" class="calendari-date-picker-remove" data-date-remove><i class="ti ti-trash" aria-hidden="true"></i><span><?php esc_html_e('Rimuovi', 'calendari'); ?></span></button>
+                    <?php endif; ?>
+                    <button type="button" class="calendari-date-picker-cancel" data-date-cancel><i class="ti ti-x" aria-hidden="true"></i><span><?php esc_html_e('Annulla', 'calendari'); ?></span></button>
+                </div>
             </div>
         </div>
         <?php

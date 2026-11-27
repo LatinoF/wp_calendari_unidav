@@ -372,7 +372,8 @@
             var days = picker.querySelector('[data-date-days]');
             var previous = picker.querySelector('[data-date-prev]');
             var next = picker.querySelector('[data-date-next]');
-            var clear = picker.querySelector('[data-date-clear]');
+            var removeDate = picker.querySelector('[data-date-remove]');
+            var cancelDate = picker.querySelector('[data-date-cancel]');
             if (!display || !value || !toggle || !popover || !monthLabel || !weekdays || !days) {
                 return;
             }
@@ -558,12 +559,17 @@
                     renderCalendar();
                 });
             }
-            if (clear) {
-                clear.addEventListener('click', function () {
+            if (removeDate) {
+                removeDate.addEventListener('click', function () {
                     value.value = '';
                     syncDisplay();
                     value.dispatchEvent(new Event('input', { bubbles: true }));
                     value.dispatchEvent(new Event('change', { bubbles: true }));
+                    closePicker(true);
+                });
+            }
+            if (cancelDate) {
+                cancelDate.addEventListener('click', function () {
                     closePicker(true);
                 });
             }
