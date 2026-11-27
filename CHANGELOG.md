@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.7.0 - 2026-11-27
+
+### Description
+Style admin dropdowns as popovers consistent with the custom date picker.
+
+### Type
+Minor
+
+### Notes
+- Replace native select menus with rounded, floating option panels across the admin interface.
+- Preserve native select values, disabled states, dynamic options, and keyboard interaction.
+
 ## v4.6.3 - 2026-11-27
 
 ### Description

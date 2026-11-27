@@ -585,6 +585,252 @@
 
     var syncDatePickerDisplays = initializeDatePickers();
 
+    var customSelectId = 0;
+
+    function syncAdminSelect(select) {
+        if (select && select.calendariSyncDropdown) {
+            select.calendariSyncDropdown();
+        }
+    }
+
+    function syncAdminSelects(container) {
+        (container || document).querySelectorAll('select').forEach(syncAdminSelect);
+    }
+
+    function initializeAdminSelects() {
+        document.querySelectorAll('.calendari-admin select').forEach(function (select) {
+            if (select.calendariSyncDropdown) {
+                return;
+            }
+
+            var label = select.closest('label');
+            var labelText = label && label.querySelector('span') ? label.querySelector('span').textContent.trim() : 'Select an option';
+            var originalRequired = select.required;
+            select.required = false;
+            select.tabIndex = -1;
+            select.setAttribute('aria-hidden', 'true');
+            select.classList.add('calendari-native-select-value');
+
+            var wrapper = document.createElement('div');
+            wrapper.className = 'calendari-custom-select';
+            select.parentNode.insertBefore(wrapper, select);
+            wrapper.appendChild(select);
+
+            customSelectId++;
+            var trigger = document.createElement('button');
+            trigger.type = 'button';
+            trigger.className = 'calendari-select-trigger';
+            trigger.id = select.id ? select.id + '-trigger' : 'calendari-select-trigger-' + customSelectId;
+            trigger.setAttribute('role', 'combobox');
+            trigger.setAttribute('aria-haspopup', 'listbox');
+            trigger.setAttribute('aria-expanded', 'false');
+            trigger.setAttribute('aria-controls', 'calendari-select-options-' + customSelectId);
+            trigger.setAttribute('aria-label', labelText);
+            var currentLabel = document.createElement('span');
+            currentLabel.className = 'calendari-select-current';
+            var arrow = document.createElement('i');
+            arrow.className = 'ti ti-chevron-down';
+            arrow.setAttribute('aria-hidden', 'true');
+            trigger.appendChild(currentLabel);
+            trigger.appendChild(arrow);
+
+            var panel = document.createElement('div');
+            panel.className = 'calendari-select-popover';
+            panel.id = 'calendari-select-options-' + customSelectId;
+            panel.setAttribute('popover', 'manual');
+            panel.setAttribute('role', 'listbox');
+            panel.setAttribute('aria-label', labelText);
+            panel.hidden = true;
+            wrapper.appendChild(trigger);
+            wrapper.appendChild(panel);
+
+            if (label) {
+                label.htmlFor = trigger.id;
+            }
+
+            function closeSelect(returnFocus) {
+                if (typeof panel.hidePopover === 'function' && panel.matches(':popover-open')) {
+                    panel.hidePopover();
+                }
+                panel.hidden = true;
+                trigger.setAttribute('aria-expanded', 'false');
+                window.removeEventListener('resize', positionPanel);
+                window.removeEventListener('scroll', positionPanel, true);
+                if (returnFocus) {
+                    trigger.focus({ preventScroll: true });
+                }
+            }
+
+            function positionPanel() {
+                var anchor = trigger.getBoundingClientRect();
+                var panelRect = panel.getBoundingClientRect();
+                var width = Math.min(Math.max(anchor.width, 220), window.innerWidth - 16);
+                var left = Math.max(8, Math.min(anchor.left, window.innerWidth - width - 8));
+                var top = anchor.bottom + 6;
+                if (top + panelRect.height > window.innerHeight - 8) {
+                    top = anchor.top - panelRect.height - 6;
+                }
+                panel.style.width = width + 'px';
+                panel.style.left = left + 'px';
+                panel.style.top = Math.max(8, top) + 'px';
+            }
+
+            function enabledOptions() {
+                return Array.prototype.slice.call(panel.querySelectorAll('.calendari-select-option:not(:disabled)'));
+            }
+
+            function sync() {
+                var selectedOption = select.options[select.selectedIndex] || select.options[0];
+                currentLabel.textContent = selectedOption ? selectedOption.textContent.trim() : '';
+                trigger.disabled = select.disabled;
+                trigger.setAttribute('aria-disabled', select.disabled ? 'true' : 'false');
+                if (select.hasAttribute('aria-invalid')) {
+                    trigger.setAttribute('aria-invalid', select.getAttribute('aria-invalid'));
+                } else {
+                    trigger.removeAttribute('aria-invalid');
+                }
+                if (select.hasAttribute('aria-describedby')) {
+                    trigger.setAttribute('aria-describedby', select.getAttribute('aria-describedby'));
+                } else {
+                    trigger.removeAttribute('aria-describedby');
+                }
+                panel.querySelectorAll('.calendari-select-option').forEach(function (option) {
+                    option.setAttribute('aria-selected', option.getAttribute('data-select-value') === select.value ? 'true' : 'false');
+                });
+            }
+
+            function chooseOption(option) {
+                if (!option || option.disabled) {
+                    return;
+                }
+                select.value = option.getAttribute('data-select-value');
+                select.dispatchEvent(new Event('change', { bubbles: true }));
+                sync();
+                var validationStatus = select.form ? select.form.querySelector('[data-modal-save-status][data-select-validation-error]') : null;
+                if (validationStatus) {
+                    validationStatus.textContent = '';
+                    validationStatus.hidden = true;
+                    validationStatus.removeAttribute('data-select-validation-error');
+                }
+                closeSelect(true);
+            }
+
+            function renderOptions() {
+                panel.replaceChildren();
+                Array.prototype.forEach.call(select.options, function (nativeOption) {
+                    var option = document.createElement('button');
+                    option.type = 'button';
+                    option.className = 'calendari-select-option';
+                    option.setAttribute('role', 'option');
+                    option.setAttribute('data-select-value', nativeOption.value);
+                    option.textContent = nativeOption.textContent.trim();
+                    option.disabled = nativeOption.disabled;
+                    option.setAttribute('aria-selected', nativeOption.value === select.value ? 'true' : 'false');
+                    option.tabIndex = -1;
+                    option.addEventListener('click', function (event) {
+                        event.preventDefault();
+                        chooseOption(option);
+                    });
+                    option.addEventListener('keydown', function (event) {
+                        var available = enabledOptions();
+                        var index = available.indexOf(option);
+                        if ('Escape' === event.key) {
+                            event.preventDefault();
+                            closeSelect(true);
+                        } else if ('ArrowDown' === event.key && index < available.length - 1) {
+                            event.preventDefault();
+                            available[index + 1].focus();
+                        } else if ('ArrowUp' === event.key && index > 0) {
+                            event.preventDefault();
+                            available[index - 1].focus();
+                        } else if ('Home' === event.key && available.length) {
+                            event.preventDefault();
+                            available[0].focus();
+                        } else if ('End' === event.key && available.length) {
+                            event.preventDefault();
+                            available[available.length - 1].focus();
+                        }
+                    });
+                    panel.appendChild(option);
+                });
+                sync();
+            }
+
+            function openSelect() {
+                renderOptions();
+                panel.hidden = false;
+                if (typeof panel.showPopover === 'function' && !panel.matches(':popover-open')) {
+                    panel.showPopover();
+                }
+                trigger.setAttribute('aria-expanded', 'true');
+                positionPanel();
+                window.addEventListener('resize', positionPanel);
+                window.addEventListener('scroll', positionPanel, true);
+                var selected = panel.querySelector('.calendari-select-option[aria-selected="true"]:not(:disabled)');
+                var firstOption = enabledOptions()[0];
+                var focusTarget = selected || firstOption;
+                if (focusTarget) {
+                    focusTarget.focus({ preventScroll: true });
+                }
+            }
+
+            trigger.addEventListener('click', function (event) {
+                event.preventDefault();
+                event.stopPropagation();
+                if (panel.hidden) {
+                    openSelect();
+                } else {
+                    closeSelect(false);
+                }
+            });
+            trigger.addEventListener('keydown', function (event) {
+                if ('ArrowDown' === event.key || 'ArrowUp' === event.key || 'Enter' === event.key || ' ' === event.key) {
+                    event.preventDefault();
+                    openSelect();
+                }
+            });
+            select.addEventListener('change', sync);
+            if (select.form) {
+                select.form.addEventListener('reset', function () {
+                    window.requestAnimationFrame(sync);
+                });
+            }
+            document.addEventListener('click', function (event) {
+                if (!wrapper.contains(event.target) && !panel.hidden) {
+                    closeSelect(false);
+                }
+            });
+            var observer = new MutationObserver(function () {
+                renderOptions();
+            });
+            observer.observe(select, { attributes: true, childList: true, subtree: true, attributeFilter: ['disabled', 'selected'] });
+
+            select.calendariSyncDropdown = sync;
+            select.calendariCustomTrigger = trigger;
+            if (originalRequired && select.form) {
+                select.form.addEventListener('submit', function (event) {
+                    if (select.disabled || '' !== select.value) {
+                        return;
+                    }
+                    event.preventDefault();
+                    event.stopImmediatePropagation();
+                    trigger.setAttribute('aria-invalid', 'true');
+                    trigger.focus({ preventScroll: true });
+                    var status = select.form.querySelector('[data-modal-save-status]');
+                    if (status) {
+                        status.textContent = 'Select an option before saving.';
+                        status.hidden = false;
+                        status.setAttribute('data-select-validation-error', '1');
+                    }
+                    openSelect();
+                });
+            }
+            sync();
+        });
+    }
+
+    initializeAdminSelects();
+
     function submitAjaxFilters(form, page, append) {
         var settings = window.CalendariAdmin || {};
         var card = form.closest('.calendari-card');
@@ -1021,6 +1267,7 @@
                     field.removeAttribute('aria-invalid');
                     field.removeAttribute('aria-describedby');
                 }
+                syncAdminSelect(field);
             });
         }
 
@@ -1106,6 +1353,7 @@
             if (previewButton) {
                 previewButton.disabled = !hasType || builderOptionsLoading;
             }
+            syncAdminSelects(shortcodeBuilder);
         }
 
         function replaceSelectOptions(select, values, selectedValue, normalizeValues) {
@@ -1134,6 +1382,7 @@
             if (select.value !== (selectedValue || '')) {
                 select.value = '';
             }
+            syncAdminSelect(select);
         }
 
         function loadBuilderOptions(selectedType, selectedAcademicYear, preserveAcademicYear) {
@@ -1466,11 +1715,12 @@
                 }
                 autoHiddenBookingDates = true;
                 examSessionBookingVisibility.value = '1';
-            } else if (autoHiddenBookingDates) {
-                examSessionBookingVisibility.value = bookingVisibilityBeforeAuto;
-                autoHiddenBookingDates = false;
+                } else if (autoHiddenBookingDates) {
+                    examSessionBookingVisibility.value = bookingVisibilityBeforeAuto;
+                    autoHiddenBookingDates = false;
+                }
+                syncAdminSelect(examSessionBookingVisibility);
             }
-        }
 
         function openExamSessionModal(record) {
             examSessionForm.reset();
@@ -1507,6 +1757,7 @@
                 examSessionBookingVisibility.value = savedBookingVisibility;
                 syncBookingDateVisibility(true);
             }
+            syncAdminSelects(examSessionModal);
             syncDatePickerDisplays(examSessionModal);
             if (examTypeLabel) {
                 examTypeLabel.hidden = 'cds' !== examSessionFields.course.value.trim().toLowerCase();
@@ -1560,6 +1811,7 @@
             }
             if (!isCds) {
                 examSessionFields.examType.value = '';
+                syncAdminSelect(examSessionFields.examType);
             }
         });
         examSessionFields.bookingOpen.addEventListener('change', syncBookingDateVisibility);
