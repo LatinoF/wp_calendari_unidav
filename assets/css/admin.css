@@ -680,6 +680,15 @@
     height: 1px;
 }
 
+.calendari-modal-save-status {
+    color: #b42318;
+    margin: 0;
+}
+
+.calendari-modal-save-status[hidden] {
+    display: none;
+}
+
 .calendari-admin-table {
     background: var(--calendari-admin-card);
     border: 1px solid var(--calendari-admin-line);

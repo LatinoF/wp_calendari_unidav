@@ -191,6 +191,116 @@
         items.insertAdjacentHTML('beforeend', html || '');
     }
 
+    function insertRecordRow(items, row) {
+        var tbody = items.querySelector('.calendari-admin-table tbody');
+        if (!tbody) {
+            items.innerHTML = '';
+            var tableContainer = document.createElement('div');
+            tableContainer.innerHTML = row.parentNode && row.parentNode.parentNode && row.parentNode.parentNode.parentNode
+                ? row.parentNode.parentNode.parentNode.outerHTML
+                : '';
+            var table = tableContainer.querySelector('.calendari-admin-table');
+            if (table) {
+                var tableBody = table.querySelector('tbody');
+                if (tableBody) {
+                    tableBody.innerHTML = '';
+                    tableBody.appendChild(row);
+                    items.appendChild(tableContainer.firstElementChild);
+                    return;
+                }
+            }
+            return;
+        }
+
+        var rowDate = row.getAttribute('data-sort-date') || '';
+        var rowId = parseInt(row.getAttribute('data-record-id'), 10) || 0;
+        var beforeRow = Array.prototype.find.call(tbody.querySelectorAll('tr[data-record-id]'), function (candidate) {
+            var candidateDate = candidate.getAttribute('data-sort-date') || '';
+            var candidateId = parseInt(candidate.getAttribute('data-record-id'), 10) || 0;
+            return rowDate < candidateDate || (rowDate === candidateDate && rowId < candidateId);
+        });
+        tbody.insertBefore(row, beforeRow || null);
+    }
+
+    function updateSavedRecord(form, data) {
+        var card = form.closest('.calendari-card');
+        var items = card ? card.querySelector('[data-filter-items]') : null;
+        if (!items) {
+            return;
+        }
+
+        var currentRow = items.querySelector('tr[data-record-id="' + String(data.id) + '"]');
+        if (currentRow && !data.matches_filters) {
+            currentRow.remove();
+        } else if (data.matches_filters && data.html) {
+            var updatedContainer = document.createElement('div');
+            updatedContainer.innerHTML = data.html;
+            var updatedRow = updatedContainer.querySelector('.calendari-admin-table tbody tr[data-record-id]');
+            if (updatedRow) {
+                if (currentRow) {
+                    currentRow.replaceWith(updatedRow);
+                } else if (data.is_new) {
+                    insertRecordRow(items, updatedRow);
+                }
+            }
+        }
+
+        var status = card.querySelector('[data-filter-status]');
+        if (status) {
+            status.textContent = data.message || '';
+        }
+    }
+
+    function submitAdminModal(form, closeModal, action) {
+        var settings = window.CalendariAdmin || {};
+        var errorStatus = form.querySelector('[data-modal-save-status]');
+        var saveButton = form.querySelector('button[type="submit"]');
+        var scrollPosition = Math.max(0, Math.round(window.scrollY || window.pageYOffset || 0));
+        var payload = new FormData(form);
+        payload.delete('calendari_save');
+        payload.delete('calendari_degree_save');
+        payload.set('action', action);
+        if (errorStatus) {
+            errorStatus.hidden = true;
+            errorStatus.textContent = '';
+        }
+        if (saveButton) {
+            saveButton.disabled = true;
+        }
+        form.setAttribute('aria-busy', 'true');
+
+        fetch(settings.ajaxUrl, {
+            method: 'POST',
+            credentials: 'same-origin',
+            body: payload,
+        }).then(function (response) {
+            return response.json().then(function (data) {
+                if (!response.ok || !data.success) {
+                    throw new Error(data && data.data && data.data.message ? data.data.message : (settings.modalSaveError || 'Unable to save the record.'));
+                }
+                return data.data;
+            });
+        }).then(function (data) {
+            updateSavedRecord(form, data);
+            if (typeof closeModal === 'function') {
+                closeModal();
+            }
+            window.requestAnimationFrame(function () {
+                window.scrollTo(0, scrollPosition);
+            });
+        }).catch(function (error) {
+            if (errorStatus) {
+                errorStatus.textContent = error.message || settings.modalSaveError || 'Unable to save the record.';
+                errorStatus.hidden = false;
+            }
+        }).finally(function () {
+            if (saveButton) {
+                saveButton.disabled = false;
+            }
+            form.removeAttribute('aria-busy');
+        });
+    }
+
     function submitAjaxFilters(form, page, append) {
         var settings = window.CalendariAdmin || {};
         var card = form.closest('.calendari-card');
@@ -1005,6 +1115,11 @@
             });
         });
 
+        degreeSessionForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            submitAdminModal(degreeSessionForm, closeDegreeSessionModal, 'calendari_save_degree_session');
+        });
+
         degreeSessionModal.querySelectorAll('[data-degree-modal-cancel]').forEach(function (button) {
             button.addEventListener('click', closeDegreeSessionModal);
         });
@@ -1102,6 +1217,11 @@
                 bookingDatesTbd: button.getAttribute('data-booking-dates-tbd'),
                 venue: button.getAttribute('data-venue'),
             });
+        });
+
+        examSessionForm.addEventListener('submit', function (event) {
+            event.preventDefault();
+            submitAdminModal(examSessionForm, closeExamSessionModal, 'calendari_save_exam_record');
         });
 
         examSessionFields.course.addEventListener('change', function () {

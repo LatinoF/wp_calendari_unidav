@@ -262,6 +262,22 @@ final class Calendari_DB {
         return $record ?: null;
     }
 
+    public function find_by_identity(array $record): ?array {
+        $identity = array(
+            Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? '')),
+            Calendari_Format::normalize_course_type((string) ($record['tipo_corso'] ?? '')),
+            trim((string) ($record['gruppo'] ?? '')),
+            (string) ($record['data_esami'] ?? ''),
+            (string) ($record['tipo_prova'] ?? ''),
+            (string) ($record['sede'] ?? ''),
+        );
+        $event_key = hash('sha256', wp_json_encode($identity));
+        $sql = $this->wpdb->prepare("SELECT * FROM {$this->table} WHERE event_key = %s", $event_key);
+        $saved_record = $this->wpdb->get_row($sql, ARRAY_A);
+
+        return $saved_record ?: null;
+    }
+
     public function distinct_aa_ids(): array {
         return array_values(array_filter(array_map('strval', $this->wpdb->get_col("SELECT DISTINCT aa_id FROM {$this->table} WHERE aa_id <> '' ORDER BY aa_id DESC"))));
     }

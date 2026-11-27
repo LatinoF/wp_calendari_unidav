@@ -15,6 +15,8 @@ final class Calendari_Admin {
         add_action('admin_enqueue_scripts', array($this, 'enqueue_assets'));
         add_action('wp_ajax_calendari_filter_database', array($this, 'handle_filter_ajax'));
         add_action('wp_ajax_calendari_shortcode_builder_options', array($this, 'handle_shortcode_builder_options_ajax'));
+        add_action('wp_ajax_calendari_save_exam_record', array($this, 'handle_exam_save_ajax'));
+        add_action('wp_ajax_calendari_save_degree_session', array($this, 'handle_degree_save_ajax'));
     }
 
     public function register_menu(): void {
@@ -39,6 +41,8 @@ final class Calendari_Admin {
                 'ajaxUrl' => admin_url('admin-ajax.php'),
                 'filterNonce' => wp_create_nonce('calendari_filter_records'),
                 'filterError' => __('Impossibile aggiornare i filtri. Riprova.', 'calendari'),
+                'modalSaveError' => __('The record could not be saved. Please try again.', 'calendari'),
+                'modalSaveSuccess' => __('Record saved.', 'calendari'),
                 'builderNonce' => wp_create_nonce('calendari_shortcode_builder_options'),
                 'builderOptionsError' => __('Impossibile caricare le opzioni per la tipologia selezionata.', 'calendari'),
             ));
@@ -204,6 +208,172 @@ final class Calendari_Admin {
         $value = wp_unslash($_POST[$key] ?? '');
 
         return is_scalar($value) ? sanitize_text_field((string) $value) : '';
+    }
+
+    public function handle_exam_save_ajax(): void {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('You do not have permission to edit records.', 'calendari')), 403);
+        }
+        if (!check_ajax_referer('calendari_save', 'calendari_nonce', false)) {
+            wp_send_json_error(array('message' => __('The form expired. Reload the page and try again.', 'calendari')), 403);
+        }
+
+        $id = absint(wp_unslash($_POST['id'] ?? 0));
+        $values = array();
+        foreach (Calendari_Importer::HEADERS as $header) {
+            $raw_value = wp_unslash($_POST[strtolower($header)] ?? '');
+            $values[$header] = is_scalar($raw_value) ? sanitize_text_field((string) $raw_value) : '';
+        }
+        $validation = Calendari_Importer::validate_values($values);
+        if ($validation['errors']) {
+            wp_send_json_error(array('message' => implode(' ', $validation['errors']), 'errors' => $validation['errors']), 400);
+        }
+
+        $record = $validation['record'];
+        $booking_dates_tbd = wp_unslash($_POST['booking_dates_tbd'] ?? '');
+        $record['booking_dates_tbd'] = is_scalar($booking_dates_tbd) && '1' === (string) $booking_dates_tbd ? 1 : 0;
+        $saved = $id ? $this->db->update($id, $record) : $this->db->upsert($record);
+        if (false === $saved) {
+            wp_send_json_error(array('message' => __('The exam record could not be saved.', 'calendari')), 500);
+        }
+
+        $saved_record = $id ? $this->db->find($id) : $this->db->find_by_identity($record);
+        if (!$saved_record) {
+            wp_send_json_error(array('message' => __('The saved exam record could not be reloaded.', 'calendari')), 500);
+        }
+
+        ob_start();
+        $this->render_exam_repository_results(array($saved_record), 1, 1, array());
+        $html = (string) ob_get_clean();
+        wp_send_json_success(array(
+            'id' => (int) $saved_record['id'],
+            'html' => $html,
+            'matches_filters' => $this->exam_record_matches_return_filters($saved_record),
+            'is_new' => !$id,
+            'message' => __('Exam record saved.', 'calendari'),
+        ));
+    }
+
+    public function handle_degree_save_ajax(): void {
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(array('message' => __('You do not have permission to edit sessions.', 'calendari')), 403);
+        }
+        if (!check_ajax_referer('calendari_degree_save', 'calendari_degree_nonce', false)) {
+            wp_send_json_error(array('message' => __('The form expired. Reload the page and try again.', 'calendari')), 403);
+        }
+
+        $id = absint(wp_unslash($_POST['id'] ?? 0));
+        $record = array(
+            'aa_id' => Calendari_Format::normalize_academic_year_id(sanitize_text_field(wp_unslash($_POST['aa_id'] ?? ''))),
+            'data' => Calendari_Importer::normalize_date(wp_unslash($_POST['data'] ?? '')),
+            'sede' => sanitize_text_field(wp_unslash($_POST['sede'] ?? '')),
+        );
+        $errors = array();
+        if ('' === $record['aa_id']) {
+            $errors[] = __('AA_ID is required.', 'calendari');
+        }
+        if ('' === $record['data'] || null === Calendari_Format::month_from_date($record['data'])) {
+            $errors[] = __('DATA must be a valid date.', 'calendari');
+        } else {
+            $record['mese'] = Calendari_Format::month_from_date($record['data']);
+        }
+        if ('' === $record['sede']) {
+            $errors[] = __('SEDE is required.', 'calendari');
+        }
+        if ($errors) {
+            wp_send_json_error(array('message' => implode(' ', $errors), 'errors' => $errors), 400);
+        }
+
+        $saved = $id ? $this->degree_db->update($id, $record) : $this->degree_db->insert($record);
+        if (false === $saved) {
+            wp_send_json_error(array('message' => __('The degree session could not be saved.', 'calendari')), 500);
+        }
+        $record_id = $id ? $id : (int) $saved;
+        $saved_record = $this->degree_db->find($record_id);
+        if (!$saved_record) {
+            wp_send_json_error(array('message' => __('The saved degree session could not be reloaded.', 'calendari')), 500);
+        }
+
+        ob_start();
+        $this->render_degree_session_results(array($saved_record), 1, 1, array());
+        $html = (string) ob_get_clean();
+        wp_send_json_success(array(
+            'id' => (int) $saved_record['id'],
+            'html' => $html,
+            'matches_filters' => $this->degree_record_matches_return_filters($saved_record),
+            'is_new' => !$id,
+            'message' => __('Degree session saved.', 'calendari'),
+        ));
+    }
+
+    private function get_return_filters(): array {
+        $filters = wp_unslash($_POST['calendari_return_filters'] ?? array());
+        if (!is_array($filters)) {
+            return array();
+        }
+
+        foreach ($filters as $key => $value) {
+            if (!is_scalar($value)) {
+                unset($filters[$key]);
+                continue;
+            }
+            $filters[$key] = sanitize_text_field((string) $value);
+        }
+
+        return $filters;
+    }
+
+    private function exam_record_matches_return_filters(array $record): bool {
+        $filters = $this->get_return_filters();
+        if ('' !== ($filters['aa_id'] ?? '')
+            && Calendari_Format::normalize_academic_year_id((string) $record['aa_id']) !== Calendari_Format::normalize_academic_year_id((string) $filters['aa_id'])
+        ) {
+            return false;
+        }
+        if ('' !== ($filters['tipo_corso'] ?? '')
+            && Calendari_Format::normalize_course_type((string) $record['tipo_corso']) !== Calendari_Format::normalize_course_type((string) $filters['tipo_corso'])
+        ) {
+            return false;
+        }
+        if ('' !== ($filters['gruppo'] ?? '')
+            && '__ungrouped' !== $filters['gruppo']
+            && (string) ($record['gruppo'] ?? '') !== (string) $filters['gruppo']
+        ) {
+            return false;
+        }
+        if ('__empty' === ($filters['tipo_prova'] ?? '')) {
+            if ('' !== (string) ($record['tipo_prova'] ?? '')) {
+                return false;
+            }
+        } elseif ('' !== ($filters['tipo_prova'] ?? '')
+            && (string) ($record['tipo_prova'] ?? '') !== (string) $filters['tipo_prova']
+        ) {
+            return false;
+        }
+        if (absint($filters['mese'] ?? 0) > 0 && (int) $record['mese'] !== absint($filters['mese'])) {
+            return false;
+        }
+
+        return true;
+    }
+
+    private function degree_record_matches_return_filters(array $record): bool {
+        $filters = $this->get_return_filters();
+        if ('' !== ($filters['aa_id'] ?? '')
+            && Calendari_Format::normalize_academic_year_id((string) $record['aa_id']) !== Calendari_Format::normalize_academic_year_id((string) $filters['aa_id'])
+        ) {
+            return false;
+        }
+        if (absint($filters['mese'] ?? 0) > 0 && (int) $record['mese'] !== absint($filters['mese'])) {
+            return false;
+        }
+        foreach (array('data', 'sede') as $field) {
+            if ('' !== ($filters[$field] ?? '') && (string) $record[$field] !== (string) $filters[$field]) {
+                return false;
+            }
+        }
+
+        return true;
     }
 
     public function handle_shortcode_builder_options_ajax(): void {
@@ -477,11 +647,12 @@ final class Calendari_Admin {
                 <div class="calendari-infinite-scroll-sentinel" data-infinite-scroll-sentinel aria-hidden="true"></div>
             </div>
             <dialog class="calendari-degree-modal" id="calendari-degree-session-modal" aria-labelledby="calendari-degree-modal-title">
-                <form method="post" class="calendari-degree-modal-form" data-preserve-filter-position>
+                <form method="post" class="calendari-degree-modal-form" data-preserve-filter-position data-ajax-save="degree">
                     <?php wp_nonce_field('calendari_degree_save', 'calendari_degree_nonce'); ?>
                     <input type="hidden" id="calendari-degree-modal-id" name="id" value="0">
                     <input type="hidden" name="calendari_degree_save" value="1">
                     <?php $this->render_modal_return_fields($filters); ?>
+                    <p class="calendari-modal-save-status" data-modal-save-status role="alert" hidden></p>
                     <header class="calendari-degree-modal-header">
                         <div>
                             <p class="calendari-degree-modal-eyebrow"><?php esc_html_e('Database Sessioni di Laurea', 'calendari'); ?></p>
@@ -527,7 +698,7 @@ final class Calendari_Admin {
                 <tbody>
                     <?php foreach ($records as $record) : ?>
                         <?php $is_hidden = !empty($record['is_hidden']); ?>
-                        <tr class="<?php echo $is_hidden ? 'calendari-record-hidden' : ''; ?>">
+                        <tr data-record-id="<?php echo esc_attr($record['id']); ?>" data-sort-date="<?php echo esc_attr($record['data']); ?>" class="<?php echo $is_hidden ? 'calendari-record-hidden' : ''; ?>">
                             <td><?php echo esc_html(Calendari_Format::academic_year_label((string) $record['aa_id'])); ?></td>
                             <td><?php echo esc_html(Calendari_Format::month_name_with_year((string) $record['data'])); ?></td>
                             <td><?php echo esc_html(Calendari_Format::format_date($record['data'])); ?></td>
@@ -950,11 +1121,12 @@ final class Calendari_Admin {
                 <div class="calendari-infinite-scroll-sentinel" data-infinite-scroll-sentinel aria-hidden="true"></div>
             </div>
             <dialog class="calendari-degree-modal calendari-exam-modal" id="calendari-exam-modal" aria-labelledby="calendari-exam-modal-title">
-                <form method="post" class="calendari-degree-modal-form" data-preserve-filter-position>
+                <form method="post" class="calendari-degree-modal-form" data-preserve-filter-position data-ajax-save="exam">
                     <?php wp_nonce_field('calendari_save', 'calendari_nonce'); ?>
                     <input type="hidden" id="calendari-exam-modal-id" name="id" value="0">
                     <input type="hidden" name="calendari_save" value="1">
                     <?php $this->render_modal_return_fields($filters); ?>
+                    <p class="calendari-modal-save-status" data-modal-save-status role="alert" hidden></p>
                     <header class="calendari-degree-modal-header">
                         <div>
                             <p class="calendari-degree-modal-eyebrow"><?php esc_html_e('Database Appelli d\'Esame', 'calendari'); ?></p>
@@ -1012,7 +1184,7 @@ final class Calendari_Admin {
                 <tbody>
                     <?php foreach ($records as $record) : ?>
                         <?php $is_hidden = !empty($record['is_hidden']); ?>
-                        <tr class="<?php echo $is_hidden ? 'calendari-record-hidden' : ''; ?>">
+                        <tr data-record-id="<?php echo esc_attr($record['id']); ?>" data-sort-date="<?php echo esc_attr($record['data_esami']); ?>" class="<?php echo $is_hidden ? 'calendari-record-hidden' : ''; ?>">
                             <td><?php echo esc_html(Calendari_Format::academic_year_label((string) $record['aa_id'])); ?></td>
                             <td><?php echo esc_html(Calendari_Format::course_type_label((string) $record['tipo_corso'])); ?></td>
                             <td class="calendari-course-codes-cell">

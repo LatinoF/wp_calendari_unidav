@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.3.2 - 2026-11-27
+
+### Description
+Save database modal edits in place without reloading or resetting the list.
+
+### Type
+Patch
+
+### Notes
+- Send exam and degree-session modal saves through AJAX.
+- Update only the affected table row and close the modal while preserving the current scroll position.
+
 ## v4.3.1 - 2026-11-27
 
 ### Description
