@@ -147,6 +147,9 @@ final class Calendari_DB {
         $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
         $tipo_corso = Calendari_Format::normalize_course_type((string) ($record['tipo_corso'] ?? ''));
         $gruppo = trim((string) ($record['gruppo'] ?? ''));
+        if ('' === $gruppo && '' !== trim((string) ($record['data_termine_pw'] ?? ''))) {
+            $gruppo = 'CLIL';
+        }
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $now = current_time('mysql', true);
         $identity = array(
@@ -207,6 +210,9 @@ final class Calendari_DB {
         $aa_id = Calendari_Format::normalize_academic_year_id((string) ($record['aa_id'] ?? ''));
         $tipo_corso = Calendari_Format::normalize_course_type((string) ($record['tipo_corso'] ?? ''));
         $gruppo = trim((string) ($record['gruppo'] ?? ''));
+        if ('' === $gruppo && '' !== trim((string) ($record['data_termine_pw'] ?? ''))) {
+            $gruppo = 'CLIL';
+        }
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $identity = array(
             (string) $aa_id,

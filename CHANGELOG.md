@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.4.0 - 2026-11-27
+
+### Description
+Automatically assign the CLIL group to exam records with a Project Work deadline when no group is specified.
+
+### Type
+Minor
+
+### Notes
+- Apply the CLIL default during imports and database saves.
+- Prefill the group in the exam modal when a Project Work deadline is entered, while preserving explicit group choices.
+
 ## v4.3.2 - 2026-11-27
 
 ### Description

@@ -1150,12 +1150,27 @@
             venue: examSessionModal.querySelector('[name="sede"]'),
         };
         var examTypeLabel = examSessionFields.examType.closest('[data-exam-type-field]');
+        var autoAssignedClilGroup = false;
         var closeExamSessionModal = examSessionModal.close
             ? function () { examSessionModal.close(); }
             : function () { examSessionModal.removeAttribute('open'); };
 
+        function applyClilGroupDefault() {
+            var hasPwDeadline = '' !== examSessionFields.pwDeadline.value.trim();
+            var groupName = examSessionFields.group.value.trim();
+
+            if (hasPwDeadline && '' === groupName) {
+                examSessionFields.group.value = 'CLIL';
+                autoAssignedClilGroup = true;
+            } else if (!hasPwDeadline && autoAssignedClilGroup && 'CLIL' === groupName.toUpperCase()) {
+                examSessionFields.group.value = '';
+                autoAssignedClilGroup = false;
+            }
+        }
+
         function openExamSessionModal(record) {
             examSessionForm.reset();
+            autoAssignedClilGroup = false;
             examSessionId.value = record ? record.id : '0';
             examSessionTitle.textContent = record ? 'Modifica Appello' : 'Nuovo Appello';
             if (record) {
@@ -1178,6 +1193,7 @@
                 examSessionFields.examType.value = record.examType;
                 examSessionFields.venue.value = record.venue;
             }
+            applyClilGroupDefault();
             if (examSessionBookingVisibility) {
                 examSessionBookingVisibility.value = record && '1' === record.bookingDatesTbd ? '1' : '0';
             }
@@ -1221,6 +1237,7 @@
 
         examSessionForm.addEventListener('submit', function (event) {
             event.preventDefault();
+            applyClilGroupDefault();
             submitAdminModal(examSessionForm, closeExamSessionModal, 'calendari_save_exam_record');
         });
 
@@ -1232,6 +1249,12 @@
             if (!isCds) {
                 examSessionFields.examType.value = '';
             }
+        });
+
+        examSessionFields.pwDeadline.addEventListener('change', applyClilGroupDefault);
+        examSessionFields.group.addEventListener('input', function () {
+            autoAssignedClilGroup = false;
+            applyClilGroupDefault();
         });
 
         examSessionModal.querySelectorAll('[data-exam-modal-cancel]').forEach(function (button) {

@@ -133,6 +133,9 @@ final class Calendari_Importer {
             'tipo_prova' => self::normalize_tipo_prova($values['TIPO_PROVA'] ?? ''),
             'sede' => sanitize_text_field((string) ($values['SEDE'] ?? '')),
         );
+        if ('' !== $record['data_termine_pw'] && '' === trim($record['gruppo'])) {
+            $record['gruppo'] = 'CLIL';
+        }
 
         foreach (array('aa_id' => 'AA_ID', 'tipo_corso' => 'TIPO_CORSO') as $key => $label) {
             if ('' === $record[$key]) {
