@@ -1,5 +1,17 @@
 # Changelog
 
+## v4.7.2 - 2026-11-27
+
+### Description
+Standardize add/edit modal field labels in uppercase Italian.
+
+### Type
+Patch
+
+### Notes
+- Replace technical import-style field labels with natural Italian labels without underscores.
+- Uppercase the course and exam type choices shown in the exam modal.
+
 ## v4.7.1 - 2026-11-27
 
 ### Description

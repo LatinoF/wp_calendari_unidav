@@ -694,10 +694,10 @@ final class Calendari_Admin {
                     </header>
                     <div class="calendari-degree-modal-fields">
                         <label for="calendari-degree-modal-aa-id">
-                            <span>AA_ID</span>
+                            <span><?php esc_html_e('ANNO ACCADEMICO', 'calendari'); ?></span>
                             <input type="text" id="calendari-degree-modal-aa-id" name="aa_id" placeholder="2026" required>
                         </label>
-                        <?php $this->render_date_picker_field('calendari-degree-modal-date', 'data', 'DATA', true); ?>
+                        <?php $this->render_date_picker_field('calendari-degree-modal-date', 'data', __('DATA DELLA SESSIONE', 'calendari'), true); ?>
                         <label for="calendari-degree-modal-venue">
                             <span>SEDE</span>
                             <input type="text" id="calendari-degree-modal-venue" name="sede" required>
@@ -1165,30 +1165,30 @@ final class Calendari_Admin {
                         </div>
                     </header>
                     <div class="calendari-degree-modal-fields calendari-exam-modal-fields">
-                        <label for="calendari-exam-modal-aa-id"><span>AA_ID</span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" placeholder="2026" required></label>
-                        <label for="calendari-exam-modal-course"><span><?php esc_html_e('Tipo di corso', 'calendari'); ?></span><select id="calendari-exam-modal-course" name="tipo_corso" required>
-                            <option value=""><?php esc_html_e('Seleziona un tipo di corso', 'calendari'); ?></option>
+                        <label for="calendari-exam-modal-aa-id"><span><?php esc_html_e('ANNO ACCADEMICO', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-aa-id" name="aa_id" placeholder="2026" required></label>
+                        <label for="calendari-exam-modal-course"><span><?php esc_html_e('TIPO DI CORSO', 'calendari'); ?></span><select id="calendari-exam-modal-course" name="tipo_corso" required>
+                            <option value=""><?php esc_html_e('SELEZIONA UN TIPO DI CORSO', 'calendari'); ?></option>
                             <?php foreach (Calendari_Format::course_type_labels() as $course_code => $course_label) : ?>
-                                <option value="<?php echo esc_attr($course_code); ?>"><?php echo esc_html($course_label); ?></option>
+                                <option value="<?php echo esc_attr($course_code); ?>"><?php echo esc_html(strtoupper($course_label)); ?></option>
                             <?php endforeach; ?>
                         </select></label>
-                        <label for="calendari-exam-modal-cds-ids"><span>CDS_IDS (facoltativo)</span><input type="text" id="calendari-exam-modal-cds-ids" name="cds_ids" placeholder="M072,M070"></label>
-                        <label for="calendari-exam-modal-group"><span><?php esc_html_e('Gruppo (facoltativo)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-group" name="gruppo" list="calendari-exam-group-options"><datalist id="calendari-exam-group-options"><?php foreach ($this->db->distinct_group_names() as $group_name) : ?><option value="<?php echo esc_attr($group_name); ?>"></option><?php endforeach; ?></datalist></label>
-                        <?php $this->render_date_picker_field('calendari-exam-modal-booking-open', 'data_apertura_prenotazioni', 'DATA_APERTURA_PRENOTAZIONI'); ?>
-                        <?php $this->render_date_picker_field('calendari-exam-modal-booking-close', 'data_chiusura_prenotazioni', 'DATA_CHIUSURA_PRENOTAZIONI'); ?>
+                        <label for="calendari-exam-modal-cds-ids"><span><?php esc_html_e('CODICI DEI CORSI DI STUDIO (FACOLTATIVO)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-cds-ids" name="cds_ids" placeholder="M072,M070"></label>
+                        <label for="calendari-exam-modal-group"><span><?php esc_html_e('GRUPPO (FACOLTATIVO)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-group" name="gruppo" list="calendari-exam-group-options"><datalist id="calendari-exam-group-options"><?php foreach ($this->db->distinct_group_names() as $group_name) : ?><option value="<?php echo esc_attr($group_name); ?>"></option><?php endforeach; ?></datalist></label>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-booking-open', 'data_apertura_prenotazioni', __('DATA DI APERTURA DELLE PRENOTAZIONI', 'calendari')); ?>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-booking-close', 'data_chiusura_prenotazioni', __('DATA DI CHIUSURA DELLE PRENOTAZIONI', 'calendari')); ?>
                         <label for="calendari-exam-modal-booking-tbd">
-                            <span><?php esc_html_e('Date prenotazioni:', 'calendari'); ?></span>
+                            <span><?php esc_html_e('VISIBILITÀ DELLE DATE DI PRENOTAZIONE', 'calendari'); ?></span>
                             <select id="calendari-exam-modal-booking-tbd" name="booking_dates_tbd">
-                                <option value="0"><?php esc_html_e('Mostra', 'calendari'); ?></option>
-                                <option value="1"><?php esc_html_e('Nascondi', 'calendari'); ?></option>
+                                <option value="0"><?php esc_html_e('MOSTRA', 'calendari'); ?></option>
+                                <option value="1"><?php esc_html_e('NASCONDI', 'calendari'); ?></option>
                             </select>
                         </label>
-                        <?php $this->render_date_picker_field('calendari-exam-modal-date', 'data_esami', 'DATA_ESAMI', true); ?>
-                        <?php $this->render_date_picker_field('calendari-exam-modal-pw-deadline', 'data_termine_pw', __('Termine consegna Project Work', 'calendari')); ?>
-                        <label for="calendari-exam-modal-type" data-exam-type-field><span>TIPO_PROVA (solo CDS)</span><select id="calendari-exam-modal-type" name="tipo_prova">
-                            <option value=""><?php esc_html_e('Non specificato', 'calendari'); ?></option>
-                            <option value="Orale"><?php esc_html_e('Orale', 'calendari'); ?></option>
-                            <option value="Scritta"><?php esc_html_e('Scritta', 'calendari'); ?></option>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-date', 'data_esami', __('DATA DELL’ESAME', 'calendari'), true); ?>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-pw-deadline', 'data_termine_pw', __('TERMINE DI CONSEGNA DEL PROJECT WORK', 'calendari')); ?>
+                        <label for="calendari-exam-modal-type" data-exam-type-field><span><?php esc_html_e('TIPO DI PROVA (SOLO CORSI DI STUDIO)', 'calendari'); ?></span><select id="calendari-exam-modal-type" name="tipo_prova">
+                            <option value=""><?php esc_html_e('NON SPECIFICATO', 'calendari'); ?></option>
+                            <option value="Orale"><?php esc_html_e('ORALE', 'calendari'); ?></option>
+                            <option value="Scritta"><?php esc_html_e('SCRITTA', 'calendari'); ?></option>
                         </select></label>
                         <label for="calendari-exam-modal-venue"><span>SEDE</span><input type="text" id="calendari-exam-modal-venue" name="sede"></label>
                     </div>
