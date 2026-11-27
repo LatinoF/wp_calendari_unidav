@@ -301,6 +301,278 @@
         });
     }
 
+    function initializeDatePickers() {
+        var settings = window.CalendariAdmin || {};
+        var locale = document.documentElement.lang || navigator.language || 'en-GB';
+        var format = settings.dateFormat || 'd/m/Y';
+
+        function parseIsoDate(value) {
+            var match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(value || '');
+            if (!match) {
+                return null;
+            }
+            var date = new Date(Number(match[1]), Number(match[2]) - 1, Number(match[3]));
+            return date.getFullYear() === Number(match[1])
+                && date.getMonth() === Number(match[2]) - 1
+                && date.getDate() === Number(match[3])
+                ? date
+                : null;
+        }
+
+        function isoDate(date) {
+            return date.getFullYear() + '-'
+                + String(date.getMonth() + 1).padStart(2, '0') + '-'
+                + String(date.getDate()).padStart(2, '0');
+        }
+
+        function formatDisplayDate(date) {
+            var day = String(date.getDate()).padStart(2, '0');
+            var month = String(date.getMonth() + 1).padStart(2, '0');
+            var year = String(date.getFullYear());
+            if ('d-m-Y' === format) {
+                return day + '-' + month + '-' + year;
+            }
+            if ('Y-m-d' === format) {
+                return year + '-' + month + '-' + day;
+            }
+            if ('m/d/Y' === format) {
+                return month + '/' + day + '/' + year;
+            }
+            if ('long_italian' === format) {
+                return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'long', year: 'numeric' }).format(date);
+            }
+            return day + '/' + month + '/' + year;
+        }
+
+        function placeholderForFormat() {
+            return {
+                'd-m-Y': 'DD-MM-YYYY',
+                'Y-m-d': 'YYYY-MM-DD',
+                'm/d/Y': 'MM/DD/YYYY',
+                'long_italian': '',
+            }[format] || 'DD/MM/YYYY';
+        }
+
+        function syncDatePickerDisplays(container) {
+            var scope = container || document;
+            scope.querySelectorAll('[data-date-picker]').forEach(function (picker) {
+                if (picker.calendariSyncDisplay) {
+                    picker.calendariSyncDisplay();
+                }
+            });
+        }
+
+        document.querySelectorAll('[data-date-picker]').forEach(function (picker) {
+            var display = picker.querySelector('[data-date-display]');
+            var value = picker.querySelector('[data-date-value]');
+            var toggle = picker.querySelector('[data-date-toggle]');
+            var popover = picker.querySelector('[data-date-popover]');
+            var monthLabel = picker.querySelector('[data-date-month-year]');
+            var weekdays = picker.querySelector('[data-date-weekdays]');
+            var days = picker.querySelector('[data-date-days]');
+            var previous = picker.querySelector('[data-date-prev]');
+            var next = picker.querySelector('[data-date-next]');
+            var clear = picker.querySelector('[data-date-clear]');
+            if (!display || !value || !toggle || !popover || !monthLabel || !weekdays || !days) {
+                return;
+            }
+
+            var today = new Date();
+            var selected = parseIsoDate(value.value);
+            var visibleMonth = selected
+                ? new Date(selected.getFullYear(), selected.getMonth(), 1)
+                : new Date(today.getFullYear(), today.getMonth(), 1);
+            var weekdayFormatter = new Intl.DateTimeFormat(locale, { weekday: 'short' });
+            var accessibleDateFormatter = new Intl.DateTimeFormat(locale, { dateStyle: 'full' });
+
+            function positionPopover() {
+                var anchor = picker.getBoundingClientRect();
+                var panel = popover.getBoundingClientRect();
+                var left = Math.max(8, Math.min(anchor.left, window.innerWidth - panel.width - 8));
+                var top = anchor.bottom + 6;
+                if (top + panel.height > window.innerHeight - 8) {
+                    top = anchor.top - panel.height - 6;
+                }
+                popover.style.left = Math.max(8, left) + 'px';
+                popover.style.top = Math.max(8, top) + 'px';
+            }
+
+            function syncDisplay() {
+                var date = parseIsoDate(value.value);
+                display.value = date ? formatDisplayDate(date) : '';
+                display.placeholder = placeholderForFormat();
+            }
+
+            function closePicker(returnFocus) {
+                popover.hidden = true;
+                display.setAttribute('aria-expanded', 'false');
+                toggle.setAttribute('aria-expanded', 'false');
+                window.removeEventListener('resize', positionPopover);
+                window.removeEventListener('scroll', positionPopover, true);
+                if (returnFocus) {
+                    display.focus();
+                }
+            }
+
+            function chooseDate(date) {
+                value.value = isoDate(date);
+                syncDisplay();
+                value.dispatchEvent(new Event('input', { bubbles: true }));
+                value.dispatchEvent(new Event('change', { bubbles: true }));
+                closePicker(true);
+            }
+
+            function focusDate(date) {
+                var button = days.querySelector('[data-date-value="' + isoDate(date) + '"]');
+                if (button) {
+                    button.focus();
+                }
+            }
+
+            function renderCalendar(focusIso) {
+                monthLabel.textContent = new Intl.DateTimeFormat(locale, { month: 'long', year: 'numeric' }).format(visibleMonth);
+                weekdays.replaceChildren();
+                days.replaceChildren();
+
+                for (var weekday = 0; weekday < 7; weekday++) {
+                    var weekdayDate = new Date(2024, 0, 1 + weekday);
+                    var weekdayLabel = document.createElement('span');
+                    weekdayLabel.setAttribute('role', 'columnheader');
+                    weekdayLabel.textContent = weekdayFormatter.format(weekdayDate);
+                    weekdays.appendChild(weekdayLabel);
+                }
+
+                var year = visibleMonth.getFullYear();
+                var month = visibleMonth.getMonth();
+                var firstWeekday = (new Date(year, month, 1).getDay() + 6) % 7;
+                var daysInMonth = new Date(year, month + 1, 0).getDate();
+                for (var blank = 0; blank < firstWeekday; blank++) {
+                    var emptyCell = document.createElement('span');
+                    emptyCell.className = 'calendari-date-picker-empty';
+                    emptyCell.setAttribute('aria-hidden', 'true');
+                    days.appendChild(emptyCell);
+                }
+
+                for (var dayNumber = 1; dayNumber <= daysInMonth; dayNumber++) {
+                    var date = new Date(year, month, dayNumber);
+                    var dayValue = isoDate(date);
+                    var dayButton = document.createElement('button');
+                    dayButton.type = 'button';
+                    dayButton.className = 'calendari-date-picker-day';
+                    dayButton.setAttribute('role', 'gridcell');
+                    dayButton.setAttribute('data-date-value', dayValue);
+                    dayButton.setAttribute('aria-label', accessibleDateFormatter.format(date));
+                    dayButton.setAttribute('aria-selected', value.value === dayValue ? 'true' : 'false');
+                    dayButton.tabIndex = value.value === dayValue ? 0 : -1;
+                    dayButton.textContent = String(dayNumber);
+                    if (dayValue === isoDate(today)) {
+                        dayButton.classList.add('is-today');
+                    }
+                    if (value.value === dayValue) {
+                        dayButton.classList.add('is-selected');
+                    }
+                    dayButton.addEventListener('click', function (event) {
+                        chooseDate(parseIsoDate(event.currentTarget.getAttribute('data-date-value')));
+                    });
+                    dayButton.addEventListener('keydown', function (event) {
+                        var offsets = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -7, ArrowDown: 7 };
+                        if (!offsets[event.key]) {
+                            if ('Escape' === event.key) {
+                                event.preventDefault();
+                                closePicker(true);
+                            }
+                            return;
+                        }
+                        event.preventDefault();
+                        var currentDate = parseIsoDate(event.currentTarget.getAttribute('data-date-value'));
+                        currentDate.setDate(currentDate.getDate() + offsets[event.key]);
+                        visibleMonth = new Date(currentDate.getFullYear(), currentDate.getMonth(), 1);
+                        renderCalendar(isoDate(currentDate));
+                    });
+                    days.appendChild(dayButton);
+                }
+
+                var trailingBlanks = (7 - (days.children.length % 7)) % 7;
+                for (var trailing = 0; trailing < trailingBlanks; trailing++) {
+                    var trailingCell = document.createElement('span');
+                    trailingCell.className = 'calendari-date-picker-empty';
+                    trailingCell.setAttribute('aria-hidden', 'true');
+                    days.appendChild(trailingCell);
+                }
+
+                var target = focusIso || value.value || isoDate(new Date(year, month, Math.min(today.getDate(), daysInMonth)));
+                focusDate(parseIsoDate(target));
+            }
+
+            function openPicker() {
+                selected = parseIsoDate(value.value);
+                visibleMonth = selected
+                    ? new Date(selected.getFullYear(), selected.getMonth(), 1)
+                    : new Date(today.getFullYear(), today.getMonth(), 1);
+                popover.hidden = false;
+                display.setAttribute('aria-expanded', 'true');
+                toggle.setAttribute('aria-expanded', 'true');
+                renderCalendar();
+                positionPopover();
+                window.addEventListener('resize', positionPopover);
+                window.addEventListener('scroll', positionPopover, true);
+            }
+
+            picker.calendariSyncDisplay = syncDisplay;
+            syncDisplay();
+            display.addEventListener('click', openPicker);
+            display.addEventListener('keydown', function (event) {
+                if ('Enter' === event.key || ' ' === event.key || 'ArrowDown' === event.key) {
+                    event.preventDefault();
+                    openPicker();
+                }
+            });
+            toggle.addEventListener('click', function () {
+                if (popover.hidden) {
+                    openPicker();
+                } else {
+                    closePicker(false);
+                }
+            });
+            popover.addEventListener('keydown', function (event) {
+                if ('Escape' === event.key) {
+                    event.preventDefault();
+                    closePicker(true);
+                }
+            });
+            if (previous) {
+                previous.addEventListener('click', function () {
+                    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
+                    renderCalendar();
+                });
+            }
+            if (next) {
+                next.addEventListener('click', function () {
+                    visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() + 1, 1);
+                    renderCalendar();
+                });
+            }
+            if (clear) {
+                clear.addEventListener('click', function () {
+                    value.value = '';
+                    syncDisplay();
+                    value.dispatchEvent(new Event('input', { bubbles: true }));
+                    value.dispatchEvent(new Event('change', { bubbles: true }));
+                    closePicker(true);
+                });
+            }
+            document.addEventListener('click', function (event) {
+                if (!picker.contains(event.target) && !popover.hidden) {
+                    closePicker(false);
+                }
+            });
+        });
+
+        return syncDatePickerDisplays;
+    }
+
+    var syncDatePickerDisplays = initializeDatePickers();
+
     function submitAjaxFilters(form, page, append) {
         var settings = window.CalendariAdmin || {};
         var card = form.closest('.calendari-card');
@@ -1088,6 +1360,7 @@
                 degreeSessionDate.value = record.date;
                 degreeSessionVenue.value = record.venue;
             }
+            syncDatePickerDisplays(degreeSessionModal);
             if (degreeSessionModal.showModal) {
                 degreeSessionModal.showModal();
             } else {
@@ -1151,6 +1424,8 @@
         };
         var examTypeLabel = examSessionFields.examType.closest('[data-exam-type-field]');
         var autoAssignedClilGroup = false;
+        var autoHiddenBookingDates = false;
+        var bookingVisibilityBeforeAuto = '0';
         var closeExamSessionModal = examSessionModal.close
             ? function () { examSessionModal.close(); }
             : function () { examSessionModal.removeAttribute('open'); };
@@ -1168,9 +1443,28 @@
             }
         }
 
+        function syncBookingDateVisibility(preserveDefault) {
+            if (!examSessionBookingVisibility) {
+                return;
+            }
+            var missingDate = !examSessionFields.bookingOpen.value.trim() || !examSessionFields.bookingClose.value.trim();
+            if (missingDate) {
+                if (!autoHiddenBookingDates && !preserveDefault) {
+                    bookingVisibilityBeforeAuto = examSessionBookingVisibility.value || '0';
+                }
+                autoHiddenBookingDates = true;
+                examSessionBookingVisibility.value = '1';
+            } else if (autoHiddenBookingDates) {
+                examSessionBookingVisibility.value = bookingVisibilityBeforeAuto;
+                autoHiddenBookingDates = false;
+            }
+        }
+
         function openExamSessionModal(record) {
             examSessionForm.reset();
             autoAssignedClilGroup = false;
+            autoHiddenBookingDates = false;
+            bookingVisibilityBeforeAuto = '0';
             examSessionId.value = record ? record.id : '0';
             examSessionTitle.textContent = record ? 'Modifica Appello' : 'Nuovo Appello';
             if (record) {
@@ -1195,8 +1489,13 @@
             }
             applyClilGroupDefault();
             if (examSessionBookingVisibility) {
-                examSessionBookingVisibility.value = record && '1' === record.bookingDatesTbd ? '1' : '0';
+                var savedBookingVisibility = record && '1' === record.bookingDatesTbd ? '1' : '0';
+                var hasSavedBookingDates = examSessionFields.bookingOpen.value.trim() && examSessionFields.bookingClose.value.trim();
+                bookingVisibilityBeforeAuto = '1' === savedBookingVisibility && hasSavedBookingDates ? '1' : '0';
+                examSessionBookingVisibility.value = savedBookingVisibility;
+                syncBookingDateVisibility(true);
             }
+            syncDatePickerDisplays(examSessionModal);
             if (examTypeLabel) {
                 examTypeLabel.hidden = 'cds' !== examSessionFields.course.value.trim().toLowerCase();
             }
@@ -1238,6 +1537,7 @@
         examSessionForm.addEventListener('submit', function (event) {
             event.preventDefault();
             applyClilGroupDefault();
+            syncBookingDateVisibility();
             submitAdminModal(examSessionForm, closeExamSessionModal, 'calendari_save_exam_record');
         });
 
@@ -1250,6 +1550,16 @@
                 examSessionFields.examType.value = '';
             }
         });
+        examSessionFields.bookingOpen.addEventListener('change', syncBookingDateVisibility);
+        examSessionFields.bookingClose.addEventListener('change', syncBookingDateVisibility);
+        if (examSessionBookingVisibility) {
+            examSessionBookingVisibility.addEventListener('change', function () {
+                if (examSessionFields.bookingOpen.value.trim() && examSessionFields.bookingClose.value.trim()) {
+                    bookingVisibilityBeforeAuto = examSessionBookingVisibility.value;
+                }
+                syncBookingDateVisibility();
+            });
+        }
 
         examSessionFields.pwDeadline.addEventListener('change', applyClilGroupDefault);
         examSessionFields.group.addEventListener('input', function () {

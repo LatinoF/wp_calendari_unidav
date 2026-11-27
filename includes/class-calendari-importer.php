@@ -133,6 +133,7 @@ final class Calendari_Importer {
             'tipo_prova' => self::normalize_tipo_prova($values['TIPO_PROVA'] ?? ''),
             'sede' => sanitize_text_field((string) ($values['SEDE'] ?? '')),
         );
+        $record['booking_dates_tbd'] = Calendari_Format::has_booking_dates($record) ? 0 : 1;
         if ('' !== $record['data_termine_pw'] && '' === trim($record['gruppo'])) {
             $record['gruppo'] = 'CLIL';
         }

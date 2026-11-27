@@ -1089,6 +1089,190 @@
     outline: 0;
 }
 
+.calendari-date-field {
+    display: grid;
+    gap: .4rem;
+    min-width: 0;
+}
+
+.calendari-date-field > label {
+    display: grid;
+    gap: .4rem;
+}
+
+.calendari-date-picker-control {
+    position: relative;
+}
+
+.calendari-admin .calendari-date-picker-display {
+    cursor: pointer;
+    padding-right: 3rem;
+}
+
+.calendari-admin .calendari-date-picker-trigger {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: var(--calendari-admin-deep);
+    cursor: pointer;
+    display: inline-flex;
+    height: 40px;
+    justify-content: center;
+    min-height: 40px;
+    padding: 0;
+    position: absolute;
+    right: 2px;
+    top: 2px;
+    width: 40px;
+}
+
+.calendari-admin .calendari-date-picker-trigger:hover,
+.calendari-admin .calendari-date-picker-trigger:focus-visible {
+    background: var(--calendari-admin-soft);
+    color: var(--calendari-admin-accent);
+    outline: 0;
+}
+
+.calendari-date-picker-popover {
+    background: var(--calendari-admin-card);
+    border: 1px solid var(--calendari-admin-line);
+    border-radius: 14px;
+    box-shadow: 0 18px 48px rgb(9 30 44 / 22%);
+    color: var(--calendari-admin-ink);
+    max-height: calc(100vh - 1rem);
+    overflow: auto;
+    padding: .85rem;
+    position: fixed;
+    width: min(21rem, calc(100vw - 1rem));
+    z-index: 100000;
+}
+
+.calendari-date-picker-popover[hidden] {
+    display: none;
+}
+
+.calendari-date-picker-header {
+    align-items: center;
+    display: grid;
+    grid-template-columns: 2.4rem minmax(0, 1fr) 2.4rem;
+    margin-bottom: .7rem;
+}
+
+.calendari-date-picker-header strong {
+    color: var(--calendari-admin-deep);
+    font-size: .95rem;
+    font-weight: 800;
+    text-align: center;
+    text-transform: capitalize;
+}
+
+.calendari-admin .calendari-date-picker-nav {
+    align-items: center;
+    background: transparent;
+    border: 0;
+    border-radius: 8px;
+    color: var(--calendari-admin-deep);
+    display: inline-flex;
+    height: 2.2rem;
+    justify-content: center;
+    min-height: 2.2rem;
+    padding: 0;
+    width: 2.2rem;
+}
+
+.calendari-admin .calendari-date-picker-nav:hover,
+.calendari-admin .calendari-date-picker-nav:focus-visible {
+    background: var(--calendari-admin-soft);
+    color: var(--calendari-admin-accent);
+    outline: 0;
+}
+
+.calendari-date-picker-weekdays,
+.calendari-date-picker-days {
+    display: grid;
+    gap: .2rem;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+}
+
+.calendari-date-picker-weekdays {
+    margin-bottom: .25rem;
+}
+
+.calendari-date-picker-weekdays span {
+    color: var(--calendari-admin-muted);
+    font-size: .7rem;
+    font-weight: 700;
+    padding: .35rem 0;
+    text-align: center;
+    text-transform: uppercase;
+}
+
+.calendari-date-picker-empty {
+    aspect-ratio: 1;
+}
+
+.calendari-admin .calendari-date-picker-day {
+    align-items: center;
+    aspect-ratio: 1;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 9px;
+    color: var(--calendari-admin-ink);
+    display: inline-flex;
+    font-size: .82rem;
+    height: auto;
+    justify-content: center;
+    min-height: 2.25rem;
+    padding: 0;
+    width: 100%;
+}
+
+.calendari-admin .calendari-date-picker-day:hover,
+.calendari-admin .calendari-date-picker-day:focus-visible {
+    background: var(--calendari-admin-soft);
+    border-color: var(--calendari-admin-line);
+    color: var(--calendari-admin-deep);
+    outline: 0;
+}
+
+.calendari-admin .calendari-date-picker-day.is-today {
+    border-color: var(--calendari-admin-accent);
+    color: var(--calendari-admin-accent);
+    font-weight: 800;
+}
+
+.calendari-admin .calendari-date-picker-day.is-selected,
+.calendari-admin .calendari-date-picker-day.is-selected:hover {
+    background: var(--calendari-admin-accent);
+    border-color: var(--calendari-admin-accent);
+    color: #fff;
+    font-weight: 800;
+}
+
+.calendari-date-picker-footer {
+    border-top: 1px solid var(--calendari-admin-line);
+    display: flex;
+    justify-content: flex-end;
+    margin-top: .65rem;
+    padding-top: .55rem;
+}
+
+.calendari-admin .calendari-date-picker-clear {
+    background: transparent;
+    border: 0;
+    color: var(--calendari-admin-accent);
+    min-height: 2rem;
+    padding: .25rem .45rem;
+}
+
+.calendari-admin .calendari-date-picker-clear:hover,
+.calendari-admin .calendari-date-picker-clear:focus-visible {
+    background: var(--calendari-admin-soft);
+    color: var(--calendari-admin-deep);
+    outline: 0;
+}
+
 .calendari-degree-modal-actions {
     border-top: 1px solid var(--calendari-admin-line);
     display: flex;

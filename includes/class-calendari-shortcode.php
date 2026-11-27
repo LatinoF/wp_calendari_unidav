@@ -258,7 +258,7 @@ final class Calendari_Shortcode {
                                     <?php echo esc_html(Calendari_Format::format_date($record['data_esami'])); ?>
                                 </time>
                                 <span><?php echo esc_html__('Prenotazioni', 'calendari'); ?></span>
-                                <?php if (!empty($record['booking_dates_tbd']) || !Calendari_Format::has_booking_dates($record)) : ?>
+                                <?php if (!empty($record['booking_dates_tbd'])) : ?>
                                     <small><?php esc_html_e('DA DEFINIRE', 'calendari'); ?></small>
                                 <?php else : ?>
                                     <small><?php echo esc_html(Calendari_Format::format_date($record['data_apertura_prenotazioni'])); ?> – <?php echo esc_html(Calendari_Format::format_date($record['data_chiusura_prenotazioni'])); ?></small>
@@ -343,7 +343,7 @@ final class Calendari_Shortcode {
                                     <?php endif; ?>
                                 <?php endif; ?>
                                 <?php if (0 === $booking_record_index) : ?>
-                                    <td class="calendari-booking-cell" rowspan="<?php echo esc_attr(count($booking_group)); ?>"><?php if (!empty($record['booking_dates_tbd']) || !Calendari_Format::has_booking_dates($record)) : ?><?php esc_html_e('DA DEFINIRE', 'calendari'); ?><?php else : ?><?php echo esc_html__('dal', 'calendari'); ?> <?php echo esc_html(Calendari_Format::format_date($record['data_apertura_prenotazioni'])); ?><br><?php echo esc_html__('al', 'calendari'); ?> <?php echo esc_html(Calendari_Format::format_date($record['data_chiusura_prenotazioni'])); ?><?php endif; ?></td>
+                                    <td class="calendari-booking-cell" rowspan="<?php echo esc_attr(count($booking_group)); ?>"><?php if (!empty($record['booking_dates_tbd'])) : ?><?php esc_html_e('DA DEFINIRE', 'calendari'); ?><?php else : ?><?php echo esc_html__('dal', 'calendari'); ?> <?php echo esc_html(Calendari_Format::format_date($record['data_apertura_prenotazioni'])); ?><br><?php echo esc_html__('al', 'calendari'); ?> <?php echo esc_html(Calendari_Format::format_date($record['data_chiusura_prenotazioni'])); ?><?php endif; ?></td>
                                 <?php endif; ?>
                                 <?php if ($show_pw_deadline) : ?>
                                     <td class="calendari-pw-deadline"><?php echo !empty($record['data_termine_pw']) ? esc_html(Calendari_Format::format_date($record['data_termine_pw'])) : '—'; ?></td>
@@ -385,7 +385,7 @@ final class Calendari_Shortcode {
     private function build_booking_groups(array $records): array {
         $groups = array();
         foreach ($records as $record) {
-            $booking_key = !empty($record['booking_dates_tbd']) || !Calendari_Format::has_booking_dates($record)
+            $booking_key = !empty($record['booking_dates_tbd'])
                 ? '__booking_dates_tbd'
                 : $record['data_apertura_prenotazioni'] . '|' . $record['data_chiusura_prenotazioni'];
             $last_group = count($groups) - 1;

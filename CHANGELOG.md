@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.6.0 - 2026-11-27
+
+### Description
+Add a custom date picker and use the existing hide setting for missing booking dates.
+
+### Type
+Minor
+
+### Notes
+- Replace native modal date controls with a styled, locale-aware calendar while preserving ISO date values.
+- Keep opening and closing dates optional; automatically set the existing booking hide flag when either date is missing in imports or saves.
+- Persist the hide flag and display `DA DEFINIRE` only when that flag is enabled.
+
 ## v4.5.0 - 2026-11-27
 
 ### Description

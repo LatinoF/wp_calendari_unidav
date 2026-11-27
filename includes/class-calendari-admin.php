@@ -43,6 +43,7 @@ final class Calendari_Admin {
                 'filterError' => __('Impossibile aggiornare i filtri. Riprova.', 'calendari'),
                 'modalSaveError' => __('The record could not be saved. Please try again.', 'calendari'),
                 'modalSaveSuccess' => __('Record saved.', 'calendari'),
+                'dateFormat' => Calendari_Format::selected_date_format(),
                 'builderNonce' => wp_create_nonce('calendari_shortcode_builder_options'),
                 'builderOptionsError' => __('Impossibile caricare le opzioni per la tipologia selezionata.', 'calendari'),
             ));
@@ -231,7 +232,8 @@ final class Calendari_Admin {
 
         $record = $validation['record'];
         $booking_dates_tbd = wp_unslash($_POST['booking_dates_tbd'] ?? '');
-        $record['booking_dates_tbd'] = is_scalar($booking_dates_tbd) && '1' === (string) $booking_dates_tbd ? 1 : 0;
+        $record['booking_dates_tbd'] = !Calendari_Format::has_booking_dates($record)
+            || (is_scalar($booking_dates_tbd) && '1' === (string) $booking_dates_tbd) ? 1 : 0;
         $saved = $id ? $this->db->update($id, $record) : $this->db->upsert($record);
         if (false === $saved) {
             wp_send_json_error(array('message' => __('The exam record could not be saved.', 'calendari')), 500);
@@ -400,6 +402,36 @@ final class Calendari_Admin {
             'academic_years' => array_map(static function (string $value): array { return array('value' => $value, 'label' => Calendari_Format::academic_year_label($value)); }, array_values($academic_years)),
             'course_types' => Calendari_Format::course_type_options($course_types),
         ));
+    }
+
+    private function render_date_picker_field(string $id, string $name, string $label, bool $required = false): void {
+        $display_id = $id . '-display';
+        ?>
+        <div class="calendari-date-field" data-date-picker data-date-required="<?php echo $required ? '1' : '0'; ?>">
+            <label for="<?php echo esc_attr($display_id); ?>"><span><?php echo esc_html($label); ?></span></label>
+            <div class="calendari-date-picker-control">
+                <input type="text" id="<?php echo esc_attr($display_id); ?>" class="calendari-date-picker-display" data-date-display readonly autocomplete="off" placeholder="DD/MM/YYYY" aria-haspopup="dialog" aria-expanded="false">
+                <input type="hidden" id="<?php echo esc_attr($id); ?>" name="<?php echo esc_attr($name); ?>" data-date-value>
+                <button type="button" class="calendari-date-picker-trigger" data-date-toggle aria-label="Choose date">
+                    <i class="ti ti-calendar" aria-hidden="true"></i>
+                </button>
+            </div>
+            <div class="calendari-date-picker-popover" data-date-popover role="dialog" aria-label="Choose date" hidden>
+                <div class="calendari-date-picker-header">
+                    <button type="button" class="calendari-date-picker-nav" data-date-prev aria-label="Previous month"><i class="ti ti-chevron-left" aria-hidden="true"></i></button>
+                    <strong data-date-month-year></strong>
+                    <button type="button" class="calendari-date-picker-nav" data-date-next aria-label="Next month"><i class="ti ti-chevron-right" aria-hidden="true"></i></button>
+                </div>
+                <div class="calendari-date-picker-weekdays" data-date-weekdays role="row"></div>
+                <div class="calendari-date-picker-days" data-date-days role="grid"></div>
+                <?php if (!$required) : ?>
+                    <div class="calendari-date-picker-footer">
+                        <button type="button" class="calendari-date-picker-clear" data-date-clear><?php esc_html_e('Cancella', 'calendari'); ?></button>
+                    </div>
+                <?php endif; ?>
+            </div>
+        </div>
+        <?php
     }
 
     public function render_page(): void {
@@ -664,10 +696,7 @@ final class Calendari_Admin {
                             <span>AA_ID</span>
                             <input type="text" id="calendari-degree-modal-aa-id" name="aa_id" placeholder="2026" required>
                         </label>
-                        <label for="calendari-degree-modal-date">
-                            <span>DATA</span>
-                            <input type="date" id="calendari-degree-modal-date" name="data" required>
-                        </label>
+                        <?php $this->render_date_picker_field('calendari-degree-modal-date', 'data', 'DATA', true); ?>
                         <label for="calendari-degree-modal-venue">
                             <span>SEDE</span>
                             <input type="text" id="calendari-degree-modal-venue" name="sede" required>
@@ -865,7 +894,8 @@ final class Calendari_Admin {
 
         $record = $validation['record'];
         $booking_dates_tbd = wp_unslash($_POST['booking_dates_tbd'] ?? '');
-        $record['booking_dates_tbd'] = is_scalar($booking_dates_tbd) && '1' === (string) $booking_dates_tbd ? 1 : 0;
+        $record['booking_dates_tbd'] = !Calendari_Format::has_booking_dates($record)
+            || (is_scalar($booking_dates_tbd) && '1' === (string) $booking_dates_tbd) ? 1 : 0;
         $saved = $id ? $this->db->update($id, $record) : $this->db->upsert($record);
         if (false === $saved) {
             $this->redirect_with_notice(array('messages' => array(__('Impossibile salvare il record.', 'calendari'))), $return_args);
@@ -1143,8 +1173,8 @@ final class Calendari_Admin {
                         </select></label>
                         <label for="calendari-exam-modal-cds-ids"><span>CDS_IDS (facoltativo)</span><input type="text" id="calendari-exam-modal-cds-ids" name="cds_ids" placeholder="M072,M070"></label>
                         <label for="calendari-exam-modal-group"><span><?php esc_html_e('Gruppo (facoltativo)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-group" name="gruppo" list="calendari-exam-group-options"><datalist id="calendari-exam-group-options"><?php foreach ($this->db->distinct_group_names() as $group_name) : ?><option value="<?php echo esc_attr($group_name); ?>"></option><?php endforeach; ?></datalist></label>
-                        <label for="calendari-exam-modal-booking-open"><span>DATA_APERTURA_PRENOTAZIONI</span><input type="date" id="calendari-exam-modal-booking-open" name="data_apertura_prenotazioni"></label>
-                        <label for="calendari-exam-modal-booking-close"><span>DATA_CHIUSURA_PRENOTAZIONI</span><input type="date" id="calendari-exam-modal-booking-close" name="data_chiusura_prenotazioni"></label>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-booking-open', 'data_apertura_prenotazioni', 'DATA_APERTURA_PRENOTAZIONI'); ?>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-booking-close', 'data_chiusura_prenotazioni', 'DATA_CHIUSURA_PRENOTAZIONI'); ?>
                         <label for="calendari-exam-modal-booking-tbd">
                             <span><?php esc_html_e('Date prenotazioni:', 'calendari'); ?></span>
                             <select id="calendari-exam-modal-booking-tbd" name="booking_dates_tbd">
@@ -1152,8 +1182,8 @@ final class Calendari_Admin {
                                 <option value="1"><?php esc_html_e('Nascondi', 'calendari'); ?></option>
                             </select>
                         </label>
-                        <label for="calendari-exam-modal-date"><span>DATA_ESAMI</span><input type="date" id="calendari-exam-modal-date" name="data_esami" required></label>
-                        <label for="calendari-exam-modal-pw-deadline"><span><?php esc_html_e('Termine consegna Project Work', 'calendari'); ?></span><input type="date" id="calendari-exam-modal-pw-deadline" name="data_termine_pw"></label>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-date', 'data_esami', 'DATA_ESAMI', true); ?>
+                        <?php $this->render_date_picker_field('calendari-exam-modal-pw-deadline', 'data_termine_pw', __('Termine consegna Project Work', 'calendari')); ?>
                         <label for="calendari-exam-modal-type" data-exam-type-field><span>TIPO_PROVA (solo CDS)</span><select id="calendari-exam-modal-type" name="tipo_prova">
                             <option value=""><?php esc_html_e('Non specificato', 'calendari'); ?></option>
                             <option value="Orale"><?php esc_html_e('Orale', 'calendari'); ?></option>

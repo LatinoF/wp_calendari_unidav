@@ -50,6 +50,7 @@ final class Calendari_DB {
         dbDelta($sql);
         $wpdb->query("UPDATE {$table} SET data_apertura_prenotazioni = NULL WHERE data_apertura_prenotazioni = '0000-00-00'");
         $wpdb->query("UPDATE {$table} SET data_chiusura_prenotazioni = NULL WHERE data_chiusura_prenotazioni = '0000-00-00'");
+        $wpdb->query("UPDATE {$table} SET booking_dates_tbd = 1 WHERE data_apertura_prenotazioni IS NULL OR data_chiusura_prenotazioni IS NULL");
         $record_courses = $wpdb->prefix . 'calendari_record_courses';
         if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($record_courses))) === $record_courses) {
             $wpdb->query(
@@ -152,6 +153,7 @@ final class Calendari_DB {
         if ('' === $gruppo && '' !== trim((string) ($record['data_termine_pw'] ?? ''))) {
             $gruppo = 'CLIL';
         }
+        $booking_dates_tbd = !Calendari_Format::has_booking_dates($record) || !empty($record['booking_dates_tbd']) ? 1 : 0;
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $now = current_time('mysql', true);
         $identity = array(
@@ -165,8 +167,8 @@ final class Calendari_DB {
         $event_key = hash('sha256', wp_json_encode($identity));
         $sql = $this->wpdb->prepare(
             "INSERT INTO {$this->table}
-                (aa_id, tipo_corso, cds_ids, gruppo_id, gruppo, mese, data_apertura_prenotazioni, data_chiusura_prenotazioni, data_esami, data_termine_pw, tipo_prova, sede, event_key, created_at, updated_at)
-             VALUES (%s, %s, %s, NULL, NULLIF(%s, ''), %d, NULLIF(%s, ''), NULLIF(%s, ''), %s, NULLIF(%s, ''), %s, %s, %s, %s, %s)
+                (aa_id, tipo_corso, cds_ids, gruppo_id, gruppo, mese, data_apertura_prenotazioni, data_chiusura_prenotazioni, data_esami, data_termine_pw, tipo_prova, sede, booking_dates_tbd, event_key, created_at, updated_at)
+             VALUES (%s, %s, %s, NULL, NULLIF(%s, ''), %d, NULLIF(%s, ''), NULLIF(%s, ''), %s, NULLIF(%s, ''), %s, %s, %d, %s, %s, %s)
              ON DUPLICATE KEY UPDATE
                 cds_ids = IF(data_esami < CURRENT_DATE, cds_ids, VALUES(cds_ids)),
                 gruppo_id = NULL,
@@ -175,10 +177,11 @@ final class Calendari_DB {
                 data_apertura_prenotazioni = VALUES(data_apertura_prenotazioni),
                 data_chiusura_prenotazioni = VALUES(data_chiusura_prenotazioni),
                 data_esami = VALUES(data_esami),
-                data_termine_pw = VALUES(data_termine_pw),
-                tipo_prova = VALUES(tipo_prova),
-                sede = VALUES(sede),
-                updated_at = VALUES(updated_at)",
+                 data_termine_pw = VALUES(data_termine_pw),
+                 tipo_prova = VALUES(tipo_prova),
+                 sede = VALUES(sede),
+                 booking_dates_tbd = VALUES(booking_dates_tbd),
+                 updated_at = VALUES(updated_at)",
             $aa_id,
             $tipo_corso,
             $cds_ids,
@@ -190,6 +193,7 @@ final class Calendari_DB {
             (string) ($record['data_termine_pw'] ?? ''),
             (string) ($record['tipo_prova'] ?? ''),
             (string) ($record['sede'] ?? ''),
+            $booking_dates_tbd,
             $event_key,
             $now,
             $now
@@ -217,6 +221,7 @@ final class Calendari_DB {
         }
         $booking_open = trim((string) ($record['data_apertura_prenotazioni'] ?? ''));
         $booking_close = trim((string) ($record['data_chiusura_prenotazioni'] ?? ''));
+        $booking_dates_tbd = !Calendari_Format::has_booking_dates($record) || !empty($record['booking_dates_tbd']) ? 1 : 0;
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $identity = array(
             (string) $aa_id,
@@ -243,11 +248,12 @@ final class Calendari_DB {
                 'data_termine_pw' => $record['data_termine_pw'] ?: null,
                 'tipo_prova' => (string) ($record['tipo_prova'] ?? ''),
                 'sede' => (string) ($record['sede'] ?? ''),
+                'booking_dates_tbd' => $booking_dates_tbd,
                 'event_key' => hash('sha256', wp_json_encode($identity)),
                 'updated_at' => current_time('mysql', true),
             ),
             array('id' => $id),
-            array('%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%s', '%s'),
+            array('%s', '%s', '%s', '%d', '%s', '%d', '%s', '%s', '%s', '%s', '%s', '%s', '%d', '%s', '%s'),
             array('%d')
         );
         if (false === $updated) {
