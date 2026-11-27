@@ -149,11 +149,14 @@ final class Calendari_Importer {
         foreach (array(
             'data_apertura_prenotazioni' => 'DATA_APERTURA_PRENOTAZIONI',
             'data_chiusura_prenotazioni' => 'DATA_CHIUSURA_PRENOTAZIONI',
-            'data_esami' => 'DATA_ESAMI',
         ) as $key => $label) {
-            if (!$record[$key]) {
+            if ('' !== trim((string) ($values[$label] ?? '')) && '' === $record[$key]) {
                 $errors[] = $prefix . sprintf(__('%s deve essere una data valida nel formato DD/MM/YYYY o YYYY-MM-DD.', 'calendari'), $label);
             }
+        }
+
+        if (!$record['data_esami']) {
+            $errors[] = $prefix . __('DATA_ESAMI deve essere una data valida nel formato DD/MM/YYYY o YYYY-MM-DD.', 'calendari');
         }
 
         $record['mese'] = Calendari_Format::month_from_date($record['data_esami']) ?? 0;

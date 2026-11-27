@@ -29,8 +29,8 @@ final class Calendari_DB {
             gruppo_id bigint(20) unsigned NULL,
             gruppo varchar(191) NULL,
             mese tinyint(3) unsigned NOT NULL,
-            data_apertura_prenotazioni date NOT NULL,
-            data_chiusura_prenotazioni date NOT NULL,
+            data_apertura_prenotazioni date NULL,
+            data_chiusura_prenotazioni date NULL,
             data_esami date NOT NULL,
             data_termine_pw date NULL,
             tipo_prova varchar(20) NOT NULL DEFAULT '',
@@ -48,6 +48,8 @@ final class Calendari_DB {
         ) {$charset_collate};";
 
         dbDelta($sql);
+        $wpdb->query("UPDATE {$table} SET data_apertura_prenotazioni = NULL WHERE data_apertura_prenotazioni = '0000-00-00'");
+        $wpdb->query("UPDATE {$table} SET data_chiusura_prenotazioni = NULL WHERE data_chiusura_prenotazioni = '0000-00-00'");
         $record_courses = $wpdb->prefix . 'calendari_record_courses';
         if ($wpdb->get_var($wpdb->prepare('SHOW TABLES LIKE %s', $wpdb->esc_like($record_courses))) === $record_courses) {
             $wpdb->query(
@@ -164,7 +166,7 @@ final class Calendari_DB {
         $sql = $this->wpdb->prepare(
             "INSERT INTO {$this->table}
                 (aa_id, tipo_corso, cds_ids, gruppo_id, gruppo, mese, data_apertura_prenotazioni, data_chiusura_prenotazioni, data_esami, data_termine_pw, tipo_prova, sede, event_key, created_at, updated_at)
-             VALUES (%s, %s, %s, NULL, NULLIF(%s, ''), %d, %s, %s, %s, NULLIF(%s, ''), %s, %s, %s, %s, %s)
+             VALUES (%s, %s, %s, NULL, NULLIF(%s, ''), %d, NULLIF(%s, ''), NULLIF(%s, ''), %s, NULLIF(%s, ''), %s, %s, %s, %s, %s)
              ON DUPLICATE KEY UPDATE
                 cds_ids = IF(data_esami < CURRENT_DATE, cds_ids, VALUES(cds_ids)),
                 gruppo_id = NULL,
@@ -182,8 +184,8 @@ final class Calendari_DB {
             $cds_ids,
             $gruppo ?: null,
             $month,
-            $record['data_apertura_prenotazioni'],
-            $record['data_chiusura_prenotazioni'],
+            (string) ($record['data_apertura_prenotazioni'] ?? ''),
+            (string) ($record['data_chiusura_prenotazioni'] ?? ''),
             $exam_date,
             (string) ($record['data_termine_pw'] ?? ''),
             (string) ($record['tipo_prova'] ?? ''),
@@ -213,6 +215,8 @@ final class Calendari_DB {
         if ('' === $gruppo && '' !== trim((string) ($record['data_termine_pw'] ?? ''))) {
             $gruppo = 'CLIL';
         }
+        $booking_open = trim((string) ($record['data_apertura_prenotazioni'] ?? ''));
+        $booking_close = trim((string) ($record['data_chiusura_prenotazioni'] ?? ''));
         $cds_ids = self::normalize_course_ids((string) ($record['cds_ids'] ?? ''));
         $identity = array(
             (string) $aa_id,
@@ -233,8 +237,8 @@ final class Calendari_DB {
                 'gruppo_id' => null,
                 'gruppo' => $gruppo ?: null,
                 'mese' => $month,
-                'data_apertura_prenotazioni' => $record['data_apertura_prenotazioni'],
-                'data_chiusura_prenotazioni' => $record['data_chiusura_prenotazioni'],
+                'data_apertura_prenotazioni' => '' === $booking_open ? null : $booking_open,
+                'data_chiusura_prenotazioni' => '' === $booking_close ? null : $booking_close,
                 'data_esami' => $record['data_esami'],
                 'data_termine_pw' => $record['data_termine_pw'] ?: null,
                 'tipo_prova' => (string) ($record['tipo_prova'] ?? ''),

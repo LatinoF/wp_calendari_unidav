@@ -980,7 +980,7 @@ final class Calendari_Admin {
         <div class="calendari-card calendari-import-card">
             <div class="calendari-section-heading">
                 <h2><?php esc_html_e('Importa calendario esami', 'calendari'); ?></h2>
-                <p><?php esc_html_e('Upload a CSV or XLSX file. AA_ID is the first year only, for example 2026; the interface displays the full academic year. TIPO_CORSO accepts a course code or full course name without regard to capitalization. CDS_IDS is optional and accepts comma-separated study-course codes. GRUPPO is optional and creates a separate table for matching events.', 'calendari'); ?></p>
+                <p><?php esc_html_e('Upload a CSV or XLSX file. AA_ID is the first year only, for example 2026; the interface displays the full academic year. TIPO_CORSO accepts a course code or full course name without regard to capitalization. Booking opening and closing dates are optional; empty values display as DA DEFINIRE. CDS_IDS is optional and accepts comma-separated study-course codes. GRUPPO is optional and creates a separate table for matching events.', 'calendari'); ?></p>
                 <a href="<?php echo esc_url(CALENDARI_URL . 'examples/calendar-sample.csv'); ?>" download><?php esc_html_e('Scarica il modello CSV', 'calendari'); ?></a>
             </div>
             <form method="post" enctype="multipart/form-data">
@@ -1143,8 +1143,8 @@ final class Calendari_Admin {
                         </select></label>
                         <label for="calendari-exam-modal-cds-ids"><span>CDS_IDS (facoltativo)</span><input type="text" id="calendari-exam-modal-cds-ids" name="cds_ids" placeholder="M072,M070"></label>
                         <label for="calendari-exam-modal-group"><span><?php esc_html_e('Gruppo (facoltativo)', 'calendari'); ?></span><input type="text" id="calendari-exam-modal-group" name="gruppo" list="calendari-exam-group-options"><datalist id="calendari-exam-group-options"><?php foreach ($this->db->distinct_group_names() as $group_name) : ?><option value="<?php echo esc_attr($group_name); ?>"></option><?php endforeach; ?></datalist></label>
-                        <label for="calendari-exam-modal-booking-open"><span>DATA_APERTURA_PRENOTAZIONI</span><input type="date" id="calendari-exam-modal-booking-open" name="data_apertura_prenotazioni" required></label>
-                        <label for="calendari-exam-modal-booking-close"><span>DATA_CHIUSURA_PRENOTAZIONI</span><input type="date" id="calendari-exam-modal-booking-close" name="data_chiusura_prenotazioni" required></label>
+                        <label for="calendari-exam-modal-booking-open"><span>DATA_APERTURA_PRENOTAZIONI</span><input type="date" id="calendari-exam-modal-booking-open" name="data_apertura_prenotazioni"></label>
+                        <label for="calendari-exam-modal-booking-close"><span>DATA_CHIUSURA_PRENOTAZIONI</span><input type="date" id="calendari-exam-modal-booking-close" name="data_chiusura_prenotazioni"></label>
                         <label for="calendari-exam-modal-booking-tbd">
                             <span><?php esc_html_e('Date prenotazioni:', 'calendari'); ?></span>
                             <select id="calendari-exam-modal-booking-tbd" name="booking_dates_tbd">

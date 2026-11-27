@@ -1,5 +1,18 @@
 # Changelog
 
+## v4.5.0 - 2026-11-27
+
+### Description
+Make booking opening and closing dates optional.
+
+### Type
+Minor
+
+### Notes
+- Permit blank booking dates in the admin modal and CSV/XLSX imports, and store them as NULL.
+- Display `DA DEFINIRE` in public calendars whenever either booking date is missing.
+- Convert legacy zero dates to NULL during the database upgrade.
+
 ## v4.4.0 - 2026-11-27
 
 ### Description

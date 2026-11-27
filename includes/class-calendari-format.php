@@ -174,6 +174,16 @@ final class Calendari_Format {
         return $options;
     }
 
+    public static function has_booking_dates(array $record): bool {
+        $opening_date = trim((string) ($record['data_apertura_prenotazioni'] ?? ''));
+        $closing_date = trim((string) ($record['data_chiusura_prenotazioni'] ?? ''));
+
+        return '' !== $opening_date
+            && '0000-00-00' !== $opening_date
+            && '' !== $closing_date
+            && '0000-00-00' !== $closing_date;
+    }
+
     public static function month_name(int $month, bool $standalone = false): string {
         $name = self::MONTH_NAMES[max(1, min(12, $month))];
 
